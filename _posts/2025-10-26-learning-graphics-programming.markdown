@@ -4,6 +4,8 @@ title:  "Two Years of Writing a Game Engine (C++, SDL, OpenGL)"
 date:   2025-10-26 12:00:00 +0530
 categories: blog technical
 tags: [Game of Ur, C++, SDL, OpenGL, 3D, Deferred Shading, MinGW, CMake, Game Engine, Linear Algebra]
+image: /assets/images/board_route.png
+image_alt: "The route over which players compete in The Royal Game of Ur"
 ---
 
 I've been working on my own game and game engine for the better part of the last 2 years.  I finished work on the engine essentials in June this year, and in the last couple of months wrote a simple (not original) game on top of it, to showcase the engine in action.
@@ -46,7 +48,7 @@ Here's a link to the [game design document](https://raynmetal.github.io/game-of-
 
 - The **control** layer is responsible for connecting the data model with objects defined on the engine.  It uses signals to broadcast changes in the state of the game, and holds signal handlers for receiving game actions.
 
-- The **visual** layer is responsible for handling human inputs and communicating the current state of the gamehttps://www..
+- The **visual** layer is responsible for handling human inputs and communicating the current state of the game.
 
 ## A rough timeline
 
