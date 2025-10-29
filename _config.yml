@@ -30,6 +30,7 @@ linkedin_username: zoheb-shuja
 instagram_username: zhebisnt
 
 show_excerpts: true
+future: true
 
 # Build settings
 theme: minima
