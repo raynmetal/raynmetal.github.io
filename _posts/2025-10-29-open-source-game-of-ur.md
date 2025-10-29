@@ -6,9 +6,12 @@ categories: project personal
 tags: [Game of Ur, C++, SDL, OpenGL, 3D, Deferred Shading, MinGW, CMake, Game Engine, Linear Algebra]
 image: /assets/images/board_route.png
 image_alt: "The route over which players compete in The Royal Game of Ur."
+excerpt_separator: <!-- end excerpt -->
 ---
 
 I adapted a version of the Royal Game of Ur using my custom 3D game engine, ToyMaker.  Both the engine and the game are programmed in C++, and make prodigious use of the SDL, Nlohmann JSON and GLM libraries, and the OpenGL graphics API.
+
+<!-- end excerpt -->
 
 ![A small clip from the game showing a player's piece overtaking a couple of opponent pieces.]({{- "/assets/images/2025-10-UrMovingStormbirdOvertakingOpponents.gif" | relative_url -}})
 
