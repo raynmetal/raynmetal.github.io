@@ -23,7 +23,9 @@ I also logged and categorized all the (mostly related) work that I did on a spre
 
 - [Github repo](https://github.com/raynmetal/game-of-ur) -- Where the project and its sources are hosted.  The [releases page](https://github.com/raynmetal/game-of-ur/releases) has the latest Windows build of the game.
 
-- [Documentation](https://raynmetal.github.io/game-of-ur/index.html) -- The site holding everything I've written about (the technical aspects of) the game and the engine.
+- [Game documentation](https://raynmetal.github.io/game-of-ur/index.html) -- The site holding everything I've written about (the technical aspects of) the game.
+
+- [Engine documentation](https://raynmetal.github.io/toymaker/index.html) -- The site holding everything I've written about the ToyMaker game-engine.
 
 - [Trello board](https://trello.com/b/LrMfzABA/game-of-ur) -- This is what I've been using to plan development.  I don't plan to do any more work on the project for the time being, but if I do, you'll see it here.
 
