@@ -51,7 +51,7 @@ Any single instance of the game is encapsulated in and interfaced with through a
 
 ### Game Controller
 
-The game controller is a [Sim Object](https://raynmetal.github.io/toymaker/classToyMaker_1_1SimObject.html) which maintains its own instance of the [Game of Ur Model](https://raynmetal.github.io/game-of-ur/classGameOfUrModel.html), reports game-related state changes to other objects in [the scene](https://raynmetal.github.io/toymaker/md_docs_2systems_2toymaker-engine_2scene__system.html) using [signals](https://raynmetal.github.io/game-of-ur/group__ToyMakerSignals.html), and, through the [player controls](https://raynmetal.github.io/game-of-ur/classUrPlayerControls.html) it instantiates, provides an interface for other objects using the engine to advance the state of the game.
+The game controller is a [Sim Object](https://raynmetal.github.io/toymaker/classToyMaker_1_1SimObject.html) which maintains its own instance of the [Game of Ur Model](https://raynmetal.github.io/game-of-ur/classGameOfUrModel.html), reports game-related state changes to other objects in [the scene](https://raynmetal.github.io/toymaker/md_docs_2systems_2toymaker-engine_2scene__system.html) using [signals](https://raynmetal.github.io/toymaker/group__ToyMakerSignals.html), and, through the [player controls](https://raynmetal.github.io/game-of-ur/classUrPlayerControls.html) it instantiates, provides an interface for other objects using the engine to advance the state of the game.
 
 ### Interactive and Visual Layer
 
@@ -59,7 +59,7 @@ The game controller is a [Sim Object](https://raynmetal.github.io/toymaker/class
 
 ![Game visuals with labels corresponding to the list below, figure 2, courtesy aankajhoka@gmail.com.]({{- "/assets/images/ui_w_labels_2.png" | relative_url -}})
 
-The visual aspect of the game, which you see on every game screen, is the collection of [UI objects](https://raynmetal.github.io/game-of-ur/group__UrGameUIComponent.html), [3D scene objects](https://raynmetal.github.io/game-of-ur/classBoardLocations.html), and [interaction logic](https://raynmetal.github.io/game-of-ur/classQueryClick.html) which come together to represent and enable interaction with the current state of the game.  The numbers on the diagram above correspond to the descriptions below.
+The visual aspect of the game, which you see on every game screen, is the collection of [UI objects](https://raynmetal.github.io/game-of-ur/group__UrGameUIComponent.html), [3D scene objects](https://raynmetal.github.io/game-of-ur/classBoardLocations.html), and [interaction logic](https://raynmetal.github.io/toymaker/classQueryClick.html) which come together to represent and enable interaction with the current state of the game.  The numbers on the diagram above correspond to the descriptions below.
 
 1. The game phase display.  Displays whose turn it is, current game phase, and action presently required.
 2. The dice display.  Has a button to roll dice, displays dice state and last turn's roll.
