@@ -37,7 +37,7 @@ The game scripts are divided into two parts, namely:
 
 - ***[Game Data Model and Controller:](https://raynmetal.github.io/game-of-ur/md_docs_2systems_2game-of-ur_202__data__model__and__controller.html)*** The part of the program responsible for accurately representing the state of the game, as well as validating and enabling updates to that state.
 
-- ***[The Visual and Interaction Layer:](https://raynmetal.github.io/game-of-ur/md_docs_2systems_2game-of-ur_202__data__model__and__controller.html)*** The part of the program responsible for visually representing the state of the game to the user, as well as translating user input to data usable by the game controller.
+- ***[The Visual and Interaction Layer:](https://raynmetal.github.io/game-of-ur/md_docs_2systems_2game-of-ur_203__visual__layer.html)*** The part of the program responsible for visually representing the state of the game to the user, as well as translating user input to data usable by the game controller.
 
 ![Game code architecture for the Royal Game of Ur.]({{- "/assets/images/Game_of_Ur_Architecture.png" | relative_url -}})
 
@@ -51,7 +51,7 @@ Any single instance of the game is encapsulated in and interfaced with through a
 
 ### Game Controller
 
-The game controller is a [Sim Object](https://raynmetal.github.io/toymaker/classToyMaker_1_1SimObject.html) which maintains its own instance of the [Game of Ur Model](https://raynmetal.github.io/game-of-ur/classGameOfUrModel.html), reports game-related state changes to other objects in [the scene](https://raynmetal.github.io/toymaker/md_docs_2systems_2toymaker-engine_2scene__system.html) using [signals](https://raynmetal.github.io/toymaker/group__ToyMakerSignals.html), and, through the [player controls](https://raynmetal.github.io/game-of-ur/classUrPlayerControls.html) it instantiates, provides an interface for other objects using the engine to advance the state of the game.
+The game controller is a [Sim Object](https://raynmetal.github.io/toymaker/classToyMaker_1_1SimObject.html) which maintains its own instance of the [Game of Ur Model](https://raynmetal.github.io/game-of-ur/classGameOfUrModel.html), reports game-related state changes to other objects in [the scene](https://raynmetal.github.io/toymaker/md_docs_2toymaker-engine_2scene__system.html) using [signals](https://raynmetal.github.io/toymaker/group__ToyMakerSignals.html), and, through the [player controls](https://raynmetal.github.io/game-of-ur/classUrPlayerControls.html) it instantiates, provides an interface for other objects using the engine to advance the state of the game.
 
 ### Interactive and Visual Layer
 
@@ -59,7 +59,7 @@ The game controller is a [Sim Object](https://raynmetal.github.io/toymaker/class
 
 ![Game visuals with labels corresponding to the list below, figure 2, courtesy aankajhoka@gmail.com.]({{- "/assets/images/ui_w_labels_2.png" | relative_url -}})
 
-The visual aspect of the game, which you see on every game screen, is the collection of [UI objects](https://raynmetal.github.io/game-of-ur/group__UrGameUIComponent.html), [3D scene objects](https://raynmetal.github.io/game-of-ur/classBoardLocations.html), and [interaction logic](https://raynmetal.github.io/toymaker/classQueryClick.html) which come together to represent and enable interaction with the current state of the game.  The numbers on the diagram above correspond to the descriptions below.
+The visual aspect of the game, which you see on every game screen, is the collection of [UI objects](https://raynmetal.github.io/toymaker/group__UrGameUIComponent.html), [3D scene objects](https://raynmetal.github.io/game-of-ur/classBoardLocations.html), and [interaction logic](https://raynmetal.github.io/toymaker/classQueryClick.html) which come together to represent and enable interaction with the current state of the game.  The numbers on the diagram above correspond to the descriptions below.
 
 1. The game phase display.  Displays whose turn it is, current game phase, and action presently required.
 2. The dice display.  Has a button to roll dice, displays dice state and last turn's roll.
@@ -75,29 +75,29 @@ The visual aspect of the game, which you see on every game screen, is the collec
 
 ## Engine Architecture
 
-The engine provides the foundation for all real-time updates and resource management in the application.  It provides a single threaded update loop (through [simulation step](https://raynmetal.github.io/toymaker/classToyMaker_1_1SceneSystem.html#a4f869efc4f3ac52dd8638c0717eb991b), [render step](https://raynmetal.github.io/toymaker/classToyMaker_1_1SceneSystem.html#a41c08066b8f1ec2cf7dd42519743510e), and [variable step](https://raynmetal.github.io/toymaker/classToyMaker_1_1SceneSystem.html#a718fdf56c9d2f93d29a5066124d93194) callbacks), a [native observer pattern implementation](https://raynmetal.github.io/toymaker/group__ToyMakerSignals.html), a [scene representation](https://raynmetal.github.io/toymaker/classToyMaker_1_1SceneSystem.html) of the world, a [component-first game scripting interface](https://raynmetal.github.io/toymaker/group__ToyMakerSimSystem.html), [input abstraction](https://raynmetal.github.io/toymaker/md_docs_2systems_2toymaker-engine_2input__system.html), and a [an extensible entity-component-system implementation](https://raynmetal.github.io/toymaker/md_docs_2systems_2toymaker-engine_2core_2ecs__system.html).
+The engine provides the foundation for all real-time updates and resource management in the application.  It provides a single threaded update loop (through [simulation step](https://raynmetal.github.io/toymaker/classToyMaker_1_1SceneSystem.html#a4f869efc4f3ac52dd8638c0717eb991b), [render step](https://raynmetal.github.io/toymaker/classToyMaker_1_1SceneSystem.html#a41c08066b8f1ec2cf7dd42519743510e), and [variable step](https://raynmetal.github.io/toymaker/classToyMaker_1_1SceneSystem.html#a718fdf56c9d2f93d29a5066124d93194) callbacks), a [native observer pattern implementation](https://raynmetal.github.io/toymaker/group__ToyMakerSignals.html), a [scene representation](https://raynmetal.github.io/toymaker/classToyMaker_1_1SceneSystem.html) of the world, a [component-first game scripting interface](https://raynmetal.github.io/toymaker/group__ToyMakerSimSystem.html), [input abstraction](https://raynmetal.github.io/toymaker/md_docs_2toymaker-engine_2input__system.html), and a [an extensible entity-component-system implementation](https://raynmetal.github.io/toymaker/md_docs_2toymaker-engine_2core_2ecs__system.html).
 
 ### ECS
 
 ![An example of ECS in action.]({{- "/assets/images/ECS_Example.png" | relative_url -}})
 
-The [engine's ECS implementation](https://raynmetal.github.io/toymaker/md_docs_2systems_2toymaker-engine_2core_2ecs__system.html) is the heart of the engine.  It tightly packs related data into [component arrays](https://raynmetal.github.io/toymaker/classToyMaker_1_1ComponentArray.html), and provides application loop and lifecycle updates through the [system base class](https://raynmetal.github.io/toymaker/classToyMaker_1_1BaseSystem.html).
+The [engine's ECS implementation](https://raynmetal.github.io/toymaker/md_docs_2toymaker-engine_2core_2ecs__system.html) is the heart of the engine.  It tightly packs related data into [component arrays](https://raynmetal.github.io/toymaker/classToyMaker_1_1ComponentArray.html), and provides application loop and lifecycle updates through the [system base class](https://raynmetal.github.io/toymaker/classToyMaker_1_1BaseSystem.html).
 
 ### Resource Database
 
 ![An example scenario involving the storage and use of resources.]({{- "/assets/images/Resource_Database_Example.png" -}})
 
-[The resource database](https://raynmetal.github.io/toymaker/md_docs_2systems_2toymaker-engine_2core_2resource__database.html) dynamically loads static resources from file (or as otherwise specified), destroys them when they are no longer needed, and in general prevents the duplication of memory-heavy objects.
+[The resource database](https://raynmetal.github.io/toymaker/md_docs_2toymaker-engine_2core_2resource__database.html) dynamically loads static resources from file (or as otherwise specified), destroys them when they are no longer needed, and in general prevents the duplication of memory-heavy objects.
 
 ### Scene System
 
-[The scene system](https://raynmetal.github.io/toymaker/md_docs_2systems_2toymaker-engine_2scene__system.html) provides a spatially/logically hierarchical representation of objects in a scene, in a manner that is familiar to game developers.
+[The scene system](https://raynmetal.github.io/toymaker/md_docs_2toymaker-engine_2scene__system.html) provides a spatially/logically hierarchical representation of objects in a scene, in a manner that is familiar to game developers.
 
 [Sim objects and sim object aspects](https://raynmetal.github.io/toymaker/group__ToyMakerSimSystem.html) use the scene system to provide a component-first game scripting interface.  Aspects, as implemented here, correspond quite closely to [Godot script nodes](https://docs.godotengine.org/en/stable/getting_started/step_by_step/scripting_first_script.html#creating-a-new-script) and [Unity MonoBehaviours](https://docs.unity3d.com/6000.0/Documentation/ScriptReference/MonoBehaviour.html).
 
 ### Render System
 
-[The render system](https://raynmetal.github.io/toymaker/md_docs_2systems_2toymaker-engine_2render__system.html) provides a set of classes that represent steps in a rendering pipeline, as well as a (hard-coded) means to glue it all together.  There is much work to be done to make it more flexible.
+[The render system](https://raynmetal.github.io/toymaker/md_docs_2toymaker-engine_2render__system.html) provides a set of classes that represent steps in a rendering pipeline, as well as a (hard-coded) means to glue it all together.  There is much work to be done to make it more flexible.
 
 ![Clip showing intermediate textures generated in the rendering pipeline]({{- "/assets/images/2025-10-ToyMakerDebugTextures.gif" | relative_url -}})
 
@@ -109,7 +109,9 @@ The scene system's [viewport nodes](https://raynmetal.github.io/toymaker/classTo
 
 ## Related Links
 
-- [Github repo](https://github.com/raynmetal/game-of-ur) -- Where the project and its sources are hosted.  The [releases page](https://github.com/raynmetal/game-of-ur/releases) has the latest Windows build of the game.
+- [Game of Ur Github repo](https://github.com/raynmetal/game-of-ur) -- Where the project and its sources are hosted.  The [releases page](https://github.com/raynmetal/game-of-ur/releases) has the latest Windows build of the game.
+
+- [ToyMaker Github repo](https://github.com/raynmetal/toymaker) -- Where the game engine and its sources are hosted.
 
 - [Game trailer](https://youtu.be/Il71rep51Es) -- A simple gameplay trailer for the Game of Ur.
 
@@ -119,7 +121,9 @@ The scene system's [viewport nodes](https://raynmetal.github.io/toymaker/classTo
 
 - [Engine documentation](https://raynmetal.github.io/toymaker/index.html) -- The site holding everything I've written about the ToyMaker engine.
 
-- [Trello board](https://trello.com/b/LrMfzABA/game-of-ur) -- This is what I've been using to plan development.  I don't plan to do any more work on the project for the time being, but if I do, you'll see it here.
+- [Game of Ur Trello board](https://trello.com/b/LrMfzABA/game-of-ur) -- This is what I've been using to plan development.  I don't plan to do any more work on the project for the time being, but if I change my mind, you'll see it here.
+
+- [ToyMaker Trello board](https://trello.com/b/ALP2KjNp/toymaker-engine) -- Trello board for engine development.  This is going to keep getting updates, albeit much more slowly than before.
 
 - [Working resources](https://drive.google.com/drive/folders/143lF6BHIolnmm7V8QTZKX0tK-dHCJNz_?usp=drive_link) -- Various recordings, editable 3D models and image files, other fun stuff.  I plan to add scans of my notebooks later on.  Some standouts:
 
