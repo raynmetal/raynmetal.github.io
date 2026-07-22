@@ -22,18 +22,18 @@ So a game -- specifically a modern realtime 3D computer game -- is, at its heart
 holds a bag of data relating to the purpose of the game, and it allows a user to modify that data in strictly controlled
 ways, periodically showing the results of those modifications to the user.
 
-The physics engine is the system in the game that attempts to model _physical phenomena,_ i.e.,  forces should cause an
-velocity to change, and the object's velocity should cause its position to change.  Out of this bag of data, therefore,
-to represent a particular _"physical"_ object in the game at a particular instant in time, we might have:
+The physics engine is the system in the game that attempts to model _physical phenomena,_ i.e.,  forces should cause a
+change in an object's velocity, and the object's velocity should cause a change in its position, etc.,.  Out of the bag
+of data that represents the game, then, in order to represent a particular _"physical"_ object, we might have:
 
-- The object's _position_ (as a list of 3 floats) and _orientation_ (as a 4 float [quaternion](https://www.youtube.com/watch?v=zjMuIxRvygQ)).
+-  The object's _position_ (as a list of 3 floats) and _orientation_ (as a 4 float [quaternion](https://www.youtube.com/watch?v=zjMuIxRvygQ)).
 
-- The _kinematic properties_ of the object, i.e., its _positional_ and _angular velocities_, each as a list of 3 floats.
+-  The _kinematic properties_ of the object, i.e., its _positional_ and _angular velocities_, each as a list of 3 floats.
 
-- The _forces_ acting on the object, represented as the _sum force_ acting on its _center of mass,_ and the _sum torque_ around
+-  The _forces_ acting on the object, represented as the _sum force_ acting on its _center of mass,_ and the _sum torque_ around
 _an axis passing through its center of mass._
 
-- The _physical properties_ of the object -- its _mass,_ _rotational inertia,_ _static_ and _dynamic friction coefficients,_ its
+-  The _physical properties_ of the object -- its _mass,_ _rotational inertia,_ _static_ and _dynamic friction coefficients,_ its
 _shape,_ and so on.
 
 We might choose to represent this data in a kind of table, like so:
@@ -56,7 +56,7 @@ We might choose to represent this data in a kind of table, like so:
 
 A part of what separates computer games from other kinds of software is that the _state of the game_ -- all represented
 in tables much like the one above -- is _advanced several times each second,_ with or without input from the user.  Those
-states are _displayed to the user 10s of times each second too,_ in the form of rapidly changing images, giving the illusion
+states are _displayed_ to the user 10s of times each second too, in the form of rapidly changing images, giving the illusion
 of movement.
 
 The physics engine performs these updates for the _physical state_ of the simulation by dividing time into a series of
@@ -64,7 +64,7 @@ discrete time steps; for a physics engine running at _60Hz,_ this would be a tim
 seconds._  At each step, the engine asks _"Given that this object is here right now, where should it be in the next 1/60th
 of a second?",_ which it then answers using formulae derived from [Newtonian mechanics.](https://en.wikipedia.org/wiki/Newton%27s_laws_of_motion)
 
-Here's what that looks like for the values from the table above, in a single time step.
+Here's what that looks like for some of the values from the table above, in a single time step.
 
 | Name | Type   |   Value       |
 |------|--------|---------------|
@@ -74,22 +74,21 @@ Here's what that looks like for the values from the table above, in a single tim
 Where:
 
 - the velocity update:
-    1. `newVel = vel + frce * timestep / mass`
-    2. `newVel = (0, -1, 0) + (0, -10, 0) * 0.016 / 1.0`
-    3. `newVel = (0, -1.16, 0)`
+    1.  `newVel = vel + frce * timestep / mass`
+    2.  `newVel = (0, -1, 0) + (0, -10, 0) * 0.016 / 1.0`
+    3.  `newVel = (0, -1.16, 0)`
 
 - the position update:
-    1. `newPos = pos + newVel * timestep`
-    2. `newPos = (0, 5.0, 0) + (0, -1.16, 0) * 0.016`
-    3. `newPos = (0, 4.98144, 0)`
+    1.  `newPos = pos + newVel * timestep`
+    2.  `newPos = (0, 5.0, 0) + (0, -1.16, 0) * 0.016`
+    3.  `newPos = (0, 4.98144, 0)`
 
 Picture such an update happening 60 times a second for this object _and every other object in the game,_ each
 represented in much the same way, and you now have a rough idea of what a physics engine does.
 
-Also, while this is a start, things get even hairier when you try to model _interactions between two or more objects_
-as opposed to each object in isolation -- but we'll get to that later.
+## The physics update
 
-## The forces integration function
+### Physics state
 
 We've already seen the table representing much of the data that we'll want to associate with an object in order to be able
 to physically model that object.  We already have a representation for object shapes in the form of [ToyMaker's ObjectBounds
@@ -168,6 +167,8 @@ struct PhysicsState {
 
 You can find a more complete description of the struct [here.](https://raynmetal.github.io/toymaker/structToyMaker_1_1PhysicsState.html#a60b087dacb5a196a2990a88b4710e21e)
 
+### The integration function (also called "prediction step")
+
 So now that we have a representation for our object's physics state, our next step is to write an _integration function_ to
 get our objects moving.  The integration function is called once per timestep, and looks something like this:
 
@@ -183,18 +184,18 @@ get our objects moving.  The integration function is called once per timestep, a
 
     4.  Using the angular velocity of the object, compute and apply the change to the object's orientation in this timestep.
 
-> **Note**
+>  **Note**
 >
-> Integration means something like _"accumulation,"_ for those not terribly comfortable with calculus terms.  In our
-> example from the previous section we used a formula to discover, given a force acting on an object's center of mass, the
-> _change to that object's velocity for a fixed quantity of time,_ which we then _added_ to the object's previous velocity
-> in order to obtain its new velocity.
+>  Integration means something like _"accumulation,"_ for those not terribly comfortable with calculus terms.  In our
+>  example from the previous section we used a formula to discover, given a force acting on an object's center of mass, the
+>  _change to that object's velocity for a fixed quantity of time,_ which we then _added_ to the object's previous velocity
+>  in order to obtain its new velocity.
 >
-> We did a similar thing with the object's velocity as well, where we _added_ the _change in position due to its velocity for
-> a fixed quantity in time_ to the object's old position to obtain its new position.
+>  We did a similar thing with the object's velocity as well, where we _added_ the _change in position due to its velocity for
+>  a fixed quantity in time_ to the object's old position to obtain its new position.
 >
-> The addition of a quantity representing some _change,_ to another quantity representing an _accumulation of such changes,_
-> is what we might call _"integration."_
+>  The addition of a quantity representing some _change,_ to another quantity representing an _accumulation of such changes,_
+>  is what we might call _"integration."_
 
 In [ToyMaker::PhysicsSystem::integrateForces(),](https://raynmetal.github.io/toymaker/classToyMaker_1_1PhysicsSystem.html#a5288427ffc70e8ed4d1799fb5a931a3f)
 that looks something like this:
@@ -252,7 +253,7 @@ Here's a clip of two balls colliding:
 
 ... well not really.  There are a couple of problems here:
 
-1. Visually, it's quite clear to us that the two balls are intersecting, and that they _shouldn't._  But try to imagine
+1.  Visually, it's quite clear to us that the two balls are intersecting, and that they _shouldn't._  But try to imagine
 what the computer sees.  Or better still, look:
 
     | Name  | Type   |   Value       |
@@ -266,19 +267,24 @@ what the computer sees.  Or better still, look:
     | shp2  | `enum` | SPHERE        |
     | rdus2 | `flt`  | 1.0           |
 
-    The fact that the balls in the demo are intersecting is slightly more difficult to see, in this form.  Even
+    The fact that the balls in the demo are intersecting is slightly more difficult to see in this form.  Even
     if we're able to apply our knowledge of geometry to answer questions about spheres, what about other shapes?
 
     Turns out that there's a very popular pair of algorithms that helps us answer intersection questions for _all_
     convex shapes: [GJK,](https://en.wikipedia.org/wiki/Gilbert%E2%80%93Johnson%E2%80%93Keerthi_distance_algorithm) to
-    determine whether a pair of convex shapes are intersecting, and [EPA,](https://winter.dev/articles/epa-algorithm/)
-    to find, for each object, its point of contact, and the distance and direction the object would need to move in order
-    to be separated from the other object.
+    determine whether a pair of convex shapes is intersecting, and [EPA,](https://winter.dev/articles/epa-algorithm/)
+    to find, for each object in the pair, its _point of contact,_ and the _distance_ and _direction_ the object would
+    need to move in order to be separated from the other object.
 
-    These two are certainly worth writeups of their own, but they've been covered extensively, so I'll just leave
-    links to helpful references at the bottom of this post.
+    >  **Note**
+    >
+    >  Concave shapes are quite often represented as groups of convex shapes in realtime physics engines.  That means that
+    >  this pair of algorithms can help us represent and use _any_ sensible 3D shape we can imagine in our physics engine.
 
-2. Assuming that we _can_ get our hands on information about the contact, how do we modify the motion of the objects such that
+    These two are certainly worth writeups of their own, but they've already been covered extensively by other authors, so
+    I'll just leave links to helpful references for them at the bottom of this post.
+
+2.  Assuming that we _can_ get our hands on information about the contact, how do we modify the motion of the objects such that
 they believably comply with physical laws?
 
 ## XPBD
@@ -289,25 +295,25 @@ Computer simulations that attempt to model physical phenomena use a class of alg
 basic idea here is that, while it is difficult to entirely prevent inaccuracies (or _errors_) in realtime simulations, what
 we can more easily do is
 
-1. Discover the error when it has occurred:
+1.  Discover the error when it has occurred:
 
-    - In our earlier example, an _intersection between two shapes_ occurred (which we know shouldn't happen, making it an
+    -  In our earlier example, an _intersection between two shapes_ occurred (which we know shouldn't happen, making it an
     error), and we were able to determine the _location,_ _direction,_ and _magnitude_ of the intersection.
 
-    - We might model the _extension of a spring_ as an error relative to its _rest length._
+    -  We might model the _extension of a spring_ as an error relative to its _rest length._
 
-    - We could also class the _deformation/change in volume_ of a deformable object as an error relative to its _original
+    -  We could also class the _deformation/change in volume_ of a deformable object as an error relative to its _original
     volume._
 
-    - Angular errors can be computed this way too.  An _overbent_ joint (as in in human-like ragdolls) is an error relative
+    -  Angular errors can be computed this way too.  An _overbent_ joint (as in in human-like ragdolls) is an error relative
     to the _angular limits_ of that joint.
 
-2. Then, either:
+2.  Then, either:
 
-    1. Compute the forces it would take to effect a correction to the objects involved in the error in as few steps as
+    1.  Compute the forces it would take to effect a correction to the objects involved in the error in as few steps as
     possible, then apply them to the objects, _resolving the error during our usual physics integration step._
 
-    2. _Apply corrections to the objects right away,_ and derive what forces would have caused the correction _after_ the
+    2.  _Apply corrections to the objects right away,_ and derive what forces would have caused the correction _after_ the
     correction has been applied (if required).
 
 The former approach is the one that has been popular in the kind of realtime physics simulations we see in video games for
@@ -323,6 +329,8 @@ collection of videos.](https://matthias-research.github.io/pages/tenMinutePhysic
 
 ### Collision constraints
 
+#### Collision response data
+
 Let's go back to our example scene.  We have two shapes -- in this case, spheres -- colliding.  The spheres begin to intersect one
 another while moving towards each other.  We have a way to _detect_ and _quantify_ their overlap in [GJK](https://en.wikipedia.org/wiki/Gilbert%E2%80%93Johnson%E2%80%93Keerthi_distance_algorithm)
 and [EPA.](https://winter.dev/articles/epa-algorithm/)
@@ -332,13 +340,13 @@ and [EPA.](https://winter.dev/articles/epa-algorithm/)
 We call the data just generated the _collision response data_ corresponding to a pair of overlapping objects.  In English, this
 is what the labele mean:
 
-- _**contact point:**_  For each object, a point on the surface of its parent shape that has the deepest penetration relative
+-  _**contact point:**_  For each object, a point on the surface of its parent shape that has the deepest penetration relative
 to the other colliding shape.
 
-- _**contact normal:**_  For each object, the direction in which the parent shape would have to move in order to no longer be
+-  _**contact normal:**_  For each object, the direction in which the parent shape would have to move in order to no longer be
 overlapping with the other colliding shape.
 
-- _**penetration depth:**_  For both objects, the shortest distance either shape would need to move along the contact normal to
+-  _**penetration depth:**_  For both objects, the shortest distance either shape would need to move along the contact normal to
 no longer be overlapping with the other.
 
 As C++ structs taken from [ToyMaker::Contact:](https://raynmetal.github.io/toymaker/structToyMaker_1_1Collision.html)
@@ -403,22 +411,43 @@ struct Collision {
 
 Per [the paper,](matthias-research.github.io/pages/publications/PBDBodies.pdf) our collision constraint is a _positional_
 constraint, meaning that the points participating in the constraint -- here, the contact points -- must be moved through
-space in order to become compliant again.  In XPBD, this occurs through a step it calls a _projected Gauss-Seidel update._
+space in order to comply with the constraint again.  In XPBD, this occurs through a step it calls a _projected Gauss-Seidel
+update._ 
 
-The general method to determine the equation for the update for _any_ constraint, given a way to measure error, is described
-briefly in [Matthias' video of the XPBD technique.](https://youtu.be/jrociOAYqxA?si=ECXFiLRQ1iT9jasx&t=547)  Here, we apply a
-version of it to the collision.  For a particular time step:
+For a general position constraint involving 2 participants, we compute a scalar value the paper calls the _Lagrange multiplier
+update,_ whose formulae are rendered in c++ syntax below:
 
-- We can conveniently ignore compliance related terms, labelled `alpha` in the paper, since our collision related constraints
+```c++
+// before the first position solve:
+float lambda = 0.f;
+
+// ...
+
+// for every other solve, for all active constraints
+const float deltaLambda = (
+    (
+        -c - alpha / (timestep * timestep) * lambda
+    ) / (
+        w_1 + w_2 + alpha / (timestep * timestep)
+    )
+);
+lambda += deltaLambda
+```
+
+The general method to determine the equation for the update for _any_ positional physical constraint, given a way to measure
+error, is described briefly in [Matthias' video of the XPBD technique.](https://youtu.be/jrociOAYqxA?si=ECXFiLRQ1iT9jasx&t=547)
+In the context of our collision correction:
+
+-  We can conveniently ignore compliance related terms, labelled `alpha` in the paper, since our collision related constraints
 will _always_ have a compliance of 0.
 
-- We treat the _penetration depth_ of the collision as the _error_ in the collision constraint. In the paper, this is the
+-  We treat the _penetration depth_ of the collision as the _error_ in the collision constraint. In the paper, this is the
 `c` term in equation _(4)_.
 
-- For each object, the _negative_ of the _contact normal_ gives us the direction of the greatest _increase_ in error.  The
-paper labels this term `n` in equations _(2),_ _(3),_ _(10),_ etc.
+-  For each object, the _negative_ of the _contact normal_ gives us the direction of the greatest _increase_ in error, which
+I'll call the correction direction.  The paper labels this term `n` in equations _(2),_ _(3),_ _(10),_ etc.
 
-- We can compute the generalized inverse mass for each object as below.  In the paper these are terms `w_1` and `w_2` in
+-  We can compute the generalized inverse mass for each object as below.  In the paper these are terms `w_1` and `w_2` in
 equations _(2)_ and _(3)._
 
     ```c++
@@ -450,12 +479,17 @@ equations _(2)_ and _(3)._
     }
     ```
 
-    Here, `correctionPoint` refers to the point on the surface of the object participating in the collision constraint,
-    while `correctionGradient` is the direction of greatest increase in error.
+    Here, `correctionPoint` refers to the point on the surface of the object participating in the constraint.  In our
+    collision constraint, this would be the object's contact point with the other object.
 
-- The _Lagrange multiplier delta_ -- `deltaLambda` in equations _(4)_ and _(5)_ of the paper, and implicitly in eqns.,
-_(6)_ onwards -- is a quantity representing the _total impulse_ that must be distributed between the objects to perform
-the correction.
+    `correctionGradient` is a vector along `n` representing the offset from the constrained point's current position that
+    it would need to move in order to increase error `c` by exactly _one_ unit.
+
+    For our collision constraint, this is a vector of magnitude one, and therefore the same as direction vector `n`.
+
+-  The _Lagrange multiplier delta_ -- `deltaLambda` in equations _(4)_ and _(5)_ of the paper, and implicitly in eqns.,
+_(6)_ onwards -- is a quantity representing the _impulse_ that must be applied to the colliding objects to perform the
+correction.
 
     ```c++
     const float lagrangeDeltaCollision {
@@ -464,20 +498,68 @@ the correction.
         )
     };
     ```
-    > **Note:**
-    >
-    > In some equations _(10)_ and onwards, the paper uses `lambda` when I _think_ what is meant is `deltaLambda`.  For
-    > collision constraints (and presumably other stiff constraints) in particular, `lambda` gives overly large values
-    > for contact forces, while `deltaLambda` produces more reasonable ones.
-    >
-    > This becomes especially important when it comes to computing frictional forces and restitution corrections.
 
-- We take the _Lagrange multiplier delta_ scalar and _correctionGradient_ direction vector together to get the _positional
+    >  **Note:**
+    >
+    >  In equations _(10)_ and onwards, the paper uses `lambda` when I _think_ what is meant is `deltaLambda`.  For
+    >  collision constraints (and presumably other stiff constraints), `lambda` gives overly large values for contact
+    >  forces, while `deltaLambda` produces more reasonable ones.
+    >
+    >  This becomes especially important when it comes to computing frictional forces and restitution corrections.
+
+-  We take the _Lagrange multiplier delta_ scalar and _correction direction_ vector together to get the _positional
 correction impulse._
 
     ```c++
     const glm::vec3 positionalImpulse { lagrangeDeltaCollision * mContactNormal };
     ```
+
+#### Applying the positional correction
+
+The positional impulse is applied _as-is_ to the center of mass of the object.  The rotational component of the
+correction is computed by its _cross product_ with the relative offset of the contact point from the object's center
+of mass. Overall, the update looks something like this:
+
+```c++
+ObjectBounds applyImpulseObject(
+    ObjectBounds object,
+    const PhysicsState& physics,
+    const glm::vec3& impulsePositional,
+    const glm::vec3& impulsePoint
+) {
+    // apply positional corrections
+    const glm::vec3 position { object.getPositionWorld() };
+    const glm::vec3 positionNew { position + impulsePositional * physics.mMassInverse };
+    object.setPositionWorld(positionNew);
+
+    // apply rotational corrections
+    const glm::vec3 impulseRotation { glm::cross(
+        impulsePoint - position, impulsePositional
+    ) };
+    object = applyImpulseObject(object, physics, impulseRotation);
+    return object;
+}
+
+ObjectBounds applyImpulseObject(
+    ObjectBounds object,
+    const PhysicsState& physics,
+    const glm::vec3& impulseRotational
+) {
+    const glm::quat orientation { object.getOrientationWorld() };
+    const glm::vec3 impulseRotationalLocal { glm::inverse(orientation) * impulseRotational };
+    const glm::vec3 deltaOrientation { orientation * (physics.mRotationalInertiaInverse * impulseRotationalLocal) };
+    const glm::quat orientationNew { glm::normalize(
+        orientation + .5f * glm::quat(0.f, deltaOrientation.x, deltaOrientation.y, deltaOrientation.z) * orientation
+    ) };
+    object.setOrientationWorld(orientationNew);
+    return object;
+}
+```
+
+>  **Note**
+>
+>  While not covered here, separating the rotational part of the correction out from the positional part
+>  allows us to reuse the rotational correction function for angular constraints.
 
 #### Modifications to the physics update
 
@@ -485,11 +567,11 @@ Now that we know how to compute values for terms participating in the Gauss-Seid
 we need to make in our physics update.
 
 The first change relates to our timestep.  Traditionally, constraint solvers would iterate through all active constraints
-several times until the total error across constraints had been minimized (or run out of iterations).  The paper advises
-against this, recommending instead to subdivide the physics timesstep into smaller _substeps._  Per the paper, this improves
-the accuracy of the simulation and its time to convergence.
+several times until the total error across constraints had been minimized (or until the solver ran out of iterations).  The
+paper advises against this.  Instead, it recommends subdividing the physics timestep into smaller _substeps._  According to
+the paper, this improves the accuracy of the simulation and its time to convergence.
 
-The other change will of course be the addition of the position solve function itself.
+The other change will of course be the addition of the position constraint solve itself.
 
 Accordingly, we get:
 
@@ -503,5 +585,129 @@ Accordingly, we get:
 
 Where the collision constraint algorithm is:
 
-1.  Get generalized inverse masses for each object.
+1.  Get the collision response data for a pair of intersecting objects.
+
+2.  Compute the generalized inverse mass for each object.
+
+3.  Use collision data to compute a _Lagrange multiplier delta._
+
+4.  Use the Lagrange multiplier delta to compute a _positional correction impulse._
+
+5.  Apply the correction impulse (in opposing directions) to both objects.
+
+Overall, this gives us an update that looks like this:
+
+```c++
+void PhysicsSystem::onSimulationStep(uint32_t timestepMillis) {
+    // subdivide our physics timestep (and convert to seconds)
+    const float substepInterval { (static_cast<float>(timestepMillis) / static_cast<float>(mSubsteps)) / static_cast<float>(1e3) };
+
+    // collect all potential collisions
+    collectPotentialCollisions(substepInterval);
+
+    // refresh lagrange multipliers for ongoing collisions
+    for(auto& constraint: mCollisionConstraints) {
+        collisionConstraint.second.resetLagrange();
+    }
+
+    for(auto substep { 0 }; substep < mSubsteps; ++substep) {
+        integrateForces(substepInterval);
+
+        // this updates the collision response data stored along with
+        // each collision constraint
+        detectCollisions();
+
+        applyPositionConstraints(substepInterval);
+    }
+}
+
+void PhysicsSystem::applyPositionConstraints(float substepInterval) {
+    // apply non-collision constraints (not shown here)
+
+    // ...
+    // ...
+    // ...
+
+    // solve collision constraints
+    for(auto& collisionPairConstraint: mCollisionConstraints) {
+        const auto& collisionEntities { collisionPairConstraint.first };
+        auto& collisionConstraint { collisionPairConstraint.second };
+
+        const auto entityA { collisionPairConstraint.first.first };
+        const auto entityB { collisionPairConstraint.first.second };
+
+        auto objectA { getComponent<ObjectBounds>(entityA) };
+        auto objectB { getComponent<ObjectBounds>(entityB) };
+        auto physicsA { getComponent<PhysicsState>(entityA) };
+        auto physicsB { getComponent<PhysicsState>(entityB) };
+
+        collisionConstraint.applyConstraintPosition(objectA, physicsA, objectB, physicsB);
+    }
+}
+
+void CollisionConstraint::applyConstraintPosition(
+    ObjectBounds& objectA, PhysicsState& physicsA,
+    ObjectBounds& objectB, PhysicsState& physicsB,
+) {
+    const glm::vec3 positionA { objectA.getPositionWorld() };
+    const glm::vec3 positionB { objectB.getPositionWorld() };
+    const glm::quat orientationA { objectA.getOrientationWorld() };
+    const glm::quat orientationB { objectB.getOrientationWorld() };
+
+    // compute generalized inverse masses for A and B -- these will
+    // be recomputed each substep, so there's no point in storing them
+    const float generalizedInverseA { computeGeneralizedInverseMassPositional(
+        objectA,
+        physicsA,
+        mLastPointContactA,
+        mContactNormal
+    ) };
+    const float generalizedInverseB { computeGeneralizedInverseMassPositional(
+        objectB,
+        physicsB,
+        mLastPointContactB,
+        mContactNormal
+    ) };
+
+    // compute correction value
+    const float alphaDerivative2 {
+        getCompliance() / (substepSeconds * substepSeconds)
+    };
+    const float lagrangeCollision { getLagrange().at(0) };
+    const float lagrangeDeltaCollision {
+        -(
+            mPenetrationDepth + alphaDerivative2 * lagrangeCollision
+        ) / (
+            generalizedInverseA + generalizedInverseB + alphaDerivative2
+        )
+    };
+    applyLagrangeDelta(lagrangeDeltaCollision, 0);
+    const glm::vec3 positionalImpulse {
+        lagrangeDeltaCollision * mContactNormal
+    };
+
+    // apply corrections
+    objectA = applyImpulseObject(
+        objectA,
+        physicsA,
+        positionalImpulse,
+        mLastPointContactA
+    );
+    objectB = applyImpulseObject(
+        objectB,
+        physicsB,
+        -positionalImpulse,
+        mLastPointContactB
+    );
+}
+```
+
+>  **Note**
+>
+>  The [actual implementation](https://raynmetal.github.io/toymaker/classToyMaker_1_1PhysicsSystem.html#ae781b2269ab42929939430c5878b4692)
+>  contains a lot of unrelated architectural cruft and tech debt, so I've omitted that here.
+
+Which finally allows our spheres to actually _collide_ with each other!
+
+![A clip of two balls moving towards each other at fixed velocities, then bouncing off one another]({{- "/assets/images/collision-1.gif" | relative_url -}})
 
