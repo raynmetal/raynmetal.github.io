@@ -1,6 +1,7 @@
 ---
 layout: post
 title: "Adding XPBD-based Physics to ToyMaker"
+toc: true
 date: 2026-7-17 14:00:00 +0530
 categories: blog technical
 tags: [C++, SDL, OpenGL, 3D, Game Engine, Physics Engine, Physics, XPBD, Extended Position Based Dynamics, ToyMaker]
@@ -56,7 +57,7 @@ We might choose to represent this data in a kind of table, like so:
 
 A part of what separates computer games from other kinds of software is that the _state of the game_ -- all represented
 in tables much like the one above -- is _advanced several times each second,_ with or without input from the user.  Those
-states are _displayed_ to the user 10s of times each second too, in the form of rapidly changing images, giving the illusion
+states are _displayed_ to the user 10s of times each second too, in the form of rapidly changing images, giving the appearance
 of movement.
 
 The physics engine performs these updates for the _physical state_ of the simulation by dividing time into a series of
@@ -293,7 +294,7 @@ they believably comply with physical laws?
 
 Computer simulations that attempt to model physical phenomena use a class of algorithms called _constraint solvers._ The
 basic idea here is that, while it is difficult to entirely prevent inaccuracies (or _errors_) in realtime simulations, what
-we can more easily do is
+we can more easily do is:
 
 1.  Discover the error when it has occurred:
 
@@ -302,10 +303,9 @@ we can more easily do is
 
     -  We might model the _extension of a spring_ as an error relative to its _rest length._
 
-    -  We could also class the _deformation/change in volume_ of a deformable object as an error relative to its _original
-    volume._
+    -  We could also class the _change in volume_ of a deformable object as an error relative to its _original volume._
 
-    -  Angular errors can be computed this way too.  An _overbent_ joint (as in in human-like ragdolls) is an error relative
+    -  Angular errors can be computed this way too.  An _overbent_ joint (picture a broken elbow) is an error relative
     to the _angular limits_ of that joint.
 
 2.  Then, either:
@@ -316,10 +316,10 @@ we can more easily do is
     2.  _Apply corrections to the objects right away,_ and derive what forces would have caused the correction _after_ the
     correction has been applied (if required).
 
-The former approach is the one that has been popular in the kind of realtime physics simulations we see in video games for
-a long time.  While there's plenty of material talking about this approach, I haven't studied it and so can't say much.
-From what I understand, [Brian Mirtich's Impulse-based Dynamic Simulation of Rigid Body Systems -- 1996](https://people.eecs.berkeley.edu/~jfc/mirtich/impulse.html)
-is the place to start.  This category of solvers are called Impulse-based solvers.
+The former approach is the one that has been popular in the kind of realtime physics simulations we've seen in video games
+for a long time.  While there's plenty of material talking about this approach, I haven't studied it and so can't really
+comment. From what I understand, [Brian Mirtich's Impulse-based Dynamic Simulation of Rigid Body Systems -- 1996](https://people.eecs.berkeley.edu/~jfc/mirtich/impulse.html)
+is the place to start.  This category of constraint solver is called an _impulse-based solver._
 
 [Detailed Rigid Body Simulation with Extended Position Based Dynamics - Matthias Müller, Miles Macklin, Nuttapong Chentanez,
 Stefan Jeschke, Tae-Yong Kim](https://matthias-research.github.io/pages/publications/PBDBodies.pdf) takes the latter approach,
@@ -338,16 +338,15 @@ and [EPA.](https://winter.dev/articles/epa-algorithm/)
 ![A diagram of two overlapping spheres with labels for their contact information]({{- "/assets/images/diagram-sphere-collision.svg" | relative_url -}})
 
 We call the data just generated the _collision response data_ corresponding to a pair of overlapping objects.  In English, this
-is what the labele mean:
+is what the labels mean:
 
--  _**contact point:**_  For each object, a point on the surface of its parent shape that has the deepest penetration relative
-to the other colliding shape.
+-  _**contact point:**_  For each object, a point on its surface that has the greatest penetration into the other colliding shape.
 
--  _**contact normal:**_  For each object, the direction in which the parent shape would have to move in order to no longer be
-overlapping with the other colliding shape.
+-  _**contact normal:**_  For each object, the direction in which it would have to move in order to no longer be overlapping
+with the other object.
 
--  _**penetration depth:**_  For both objects, the shortest distance either shape would need to move along the contact normal to
-no longer be overlapping with the other.
+-  _**penetration depth:**_  For both objects, the shortest distance either object would need to move along its contact normal
+to no longer be overlapping with the other object.
 
 As C++ structs taken from [ToyMaker::Contact:](https://raynmetal.github.io/toymaker/structToyMaker_1_1Collision.html)
 
@@ -411,8 +410,7 @@ struct Collision {
 
 Per [the paper,](matthias-research.github.io/pages/publications/PBDBodies.pdf) our collision constraint is a _positional_
 constraint, meaning that the points participating in the constraint -- here, the contact points -- must be moved through
-space in order to comply with the constraint again.  In XPBD, this occurs through a step it calls a _projected Gauss-Seidel
-update._ 
+space to comply with the constraint again.  In XPBD, this occurs through a step it calls a _projected Gauss-Seidel update._
 
 For a general position constraint involving 2 participants, we compute a scalar value the paper calls the _Lagrange multiplier
 update,_ whose formulae are rendered in c++ syntax below:
@@ -598,6 +596,7 @@ Where the collision constraint algorithm is:
 Overall, this gives us an update that looks like this:
 
 ```c++
+// high level physics update
 void PhysicsSystem::onSimulationStep(uint32_t timestepMillis) {
     // subdivide our physics timestep (and convert to seconds)
     const float substepInterval { (static_cast<float>(timestepMillis) / static_cast<float>(mSubsteps)) / static_cast<float>(1e3) };
@@ -614,10 +613,13 @@ void PhysicsSystem::onSimulationStep(uint32_t timestepMillis) {
         integrateForces(substepInterval);
 
         // this updates the collision response data stored along with
-        // each collision constraint
+        // each collision constraint using GJK and EPA
         detectCollisions();
 
         applyPositionConstraints(substepInterval);
+
+        // we'll talk about this soon!
+        deriveVelocities(substepInterval);
     }
 }
 
@@ -645,9 +647,10 @@ void PhysicsSystem::applyPositionConstraints(float substepInterval) {
     }
 }
 
+// application of a single positional constraint
 void CollisionConstraint::applyConstraintPosition(
     ObjectBounds& objectA, PhysicsState& physicsA,
-    ObjectBounds& objectB, PhysicsState& physicsB,
+    ObjectBounds& objectB, PhysicsState& physicsB
 ) {
     const glm::vec3 positionA { objectA.getPositionWorld() };
     const glm::vec3 positionB { objectB.getPositionWorld() };
@@ -670,15 +673,12 @@ void CollisionConstraint::applyConstraintPosition(
     ) };
 
     // compute correction value
-    const float alphaDerivative2 {
-        getCompliance() / (substepSeconds * substepSeconds)
-    };
     const float lagrangeCollision { getLagrange().at(0) };
     const float lagrangeDeltaCollision {
         -(
-            mPenetrationDepth + alphaDerivative2 * lagrangeCollision
+            mPenetrationDepth
         ) / (
-            generalizedInverseA + generalizedInverseB + alphaDerivative2
+            generalizedInverseA + generalizedInverseB
         )
     };
     applyLagrangeDelta(lagrangeDeltaCollision, 0);
@@ -699,15 +699,379 @@ void CollisionConstraint::applyConstraintPosition(
         -positionalImpulse,
         mLastPointContactB
     );
+
+    updateComponent(entityA, objectA);
+    updateComponent(entityB, objectB);
 }
 ```
 
 >  **Note**
 >
 >  The [actual implementation](https://raynmetal.github.io/toymaker/classToyMaker_1_1PhysicsSystem.html#ae781b2269ab42929939430c5878b4692)
->  contains a lot of unrelated architectural cruft and tech debt, so I've omitted that here.
+>  contains a lot of tech debt and architectural cruft which I've omitted here.
 
-Which finally allows our spheres to actually _collide_ with each other!
+
+#### Deriving velocities after the update
+
+I snuck in an extra function in the high level physics update that we haven't covered yet.
+
+```c++
+// high level physics update
+void PhysicsSystem::onSimulationStep(uint32_t timestepMillis) {
+    for(auto substep { 0 }; substep < mSubsteps; ++substep) {
+        // everything else
+
+        // ...
+        // ...
+        // ...
+
+        // !!!!!!!! this thing:
+        deriveVelocities(substepInterval);
+    }
+}
+```
+
+The problem here is that we might have a hundred positional constraints affecting the same object.  Imagine one ball
+among several balls gradually filling in a basket, for example.
+
+Our position constraint prevents the ball from intersecting with the other balls and from escaping the basket, _but it
+does not modify the motion of the ball,_ meaning that the ball will continue to try to move in the same direction.  In the
+code snippets shown thus far, we don't touch [PhysicsState::mVelocity](https://raynmetal.github.io/toymaker/structToyMaker_1_1PhysicsState.html#abc620d3154942b11e88f3bd8c3570d94)
+or [PhysicsState::mAngularVelocity.](https://raynmetal.github.io/toymaker/structToyMaker_1_1PhysicsState.html#a2a5493c15e43afc8cbd52306376b802a)
+
+`deriveVelocities()` is responsible for this instead.  It measures the changes in positions and orientations of each object
+in the simulation, and along with the substep interval uses these measurements to tell what the object's velocities actually
+are.  These are 3D versions of `velocity = (position2 - position1) / time` and `angularVelocity = (angle2 - angle1) / time`.
+
+First, we need to cache object properties prior to the position solve.
+
+```c++
+void PhysicsSystem::integrateForces(float substepSeconds) {
+    // all the other stuff
+
+    // ...
+    // ...
+    // ...
+
+    mPreviousStates[entity].mPhysics = physics;
+    mPreviousStates[entity].mBounds = bounds;
+}
+```
+
+Then, we can solve for the object's new velocities:
+
+```c++
+void PhysicsSystem::deriveVelocities(float substepSeconds) {
+    for(const auto entity: getEnabledEntities()) {
+
+        // retrieve current and previous states
+        auto physics { getComponent<PhysicsState>(entity) };
+        const auto bounds { getComponent<ObjectBounds>(entity) };
+        const auto orientationInverse { glm::inverse(bounds.getOrientationWorld()) };
+        const auto& previousState { mPreviousStates[entity] };
+
+        // update linear terms
+        physics.mVelocity = (
+            (bounds.getPositionWorld() - previousState.mBounds.getPositionWorld())
+            / substepSeconds
+        );
+
+        // update angular terms
+        const glm::quat deltaOrientation {
+            (bounds.getOrientationWorld() * glm::inverse(mPreviousStates.mBounds.getOrientationWorld()))
+        };
+        physicsProps.mAngularVelocity = (2.f * glm::vec3 {
+            deltaOrientation.x, deltaOrientation.y, deltaOrientation.z
+        } / substepSeconds);
+        physicsProps.mAngularVelocity *= deltaOrientation.w >= 0.f ? 1.f : -1.f;
+
+        updateComponent(entity, physics);
+    }
+}
+```
+
+>  **Note**
+>
+>  We didn't need this before because an object's external forces, velocity, and position and orientation, all had
+>  a simple one-to-one relationship with each other.
+>
+>  The position changes introduced by the position constraint
+>  _break_ that relationship.
+
+This finally allows our spheres to actually _collide,_ then bounce away from each other!
 
 ![A clip of two balls moving towards each other at fixed velocities, then bouncing off one another]({{- "/assets/images/collision-1.gif" | relative_url -}})
+
+### Friction constraints
+
+We aren't done yet.  Take a look at this clip.
+
+![A clip of two balls moving towards each other at fixed velocities and vertical offsets, sliding off each other when they
+meet]({{- "/assets/images/collision-2.gif" | relative_url -}})
+
+And this one.
+
+![A moving block sliding down and off a gentle incline]({{- "/assets/images/slope-friction-0.gif" | relative_url -}})
+
+>  **Note:**
+>
+>  The incline is tagged by the physics system as a **static** object.  This causes the physics system to exclude it from
+>  velocity and position updates, while still allowing **dynamic** objects to collide with it. It is treated as an object
+>  with infinite mass during these collisions.
+>
+>  Most physics engines do this kind of tagging for the objects in the scenes they manage, reserving expensive physics
+>  updates strictly for those objects that require it.
+
+If all the world was made of ice or bowling ball alleys, there would be nothing particularly wrong with this.  I want more
+than that, though, so we'll need to add _friction constraints._
+
+There are two kinds of friction forces:
+
+-  _Static friction_ attempts to _prevent_ relative tangential motion between two bodies at their point of contact.
+
+-  _Dynamic friction_ _opposes_ relative tangential motion _that is already taking place_ between two objects, again at
+their point of contact.
+
+In XPBD, the first is modeled as a _position constraint,_ very like the one we used for the collision itself.  The
+second is modeled through something called a _velocity constraint._  Sections _3.5_ and _3.6_ of [the paper](https://matthias-research.github.io/pages/publications/PBDBodies.pdf)
+talk about this.
+
+#### Static friction
+
+When a force attempts to move an object tangentially, relative to another object, a _static friction force_ exactly equal
+to that force in the opposite direction arises and prevents this motion, up to some threshold given by `mu_static * normalForce`,
+where `mu_static` is the [static friction coefficient](https://www.britannica.com/science/coefficient-of-friction) between
+the surfaces of the two objects.
+
+After the collision correction, we can find the vector representing the tangential change in the position of the contact
+point.
+
+```c++
+// called before the physics update, as part of detectCollisions()
+void CollisionConstraint::updateCollisionData(
+    const Collision& collision,
+    const PhysicsState& physicsA, const ObjectBounds& boundsA,
+    const PhysicsState& physicsB, const ObjectBounds& boundsB
+) {
+    mLastPointContactA = collision.mContactA.mPoint;
+    mLastPointContactB = collision.mContactB.mPoint;
+    mRelativePointContactA = (
+        glm::inverse(boundsA.getOrientationWorld()) * (
+            collision.mContactA.mPoint - boundsA.getPositionWorld()
+        )
+    );
+    mRelativePointContactB = (
+        glm::inverse(boundsB.getOrientationWorld()) * (
+            collision.mContactB.mPoint - boundsB.getPositionWorld()
+        )
+    );
+}
+
+void CollisionConstraint::applyConstraintPosition(/* args */) {
+    // collision position constraint applied
+
+    // ...
+    // ...
+    // ...
+
+    // derive relative motion of point of contact
+    const glm::vec3 pointContactANew { positionANew + orientationANew * mRelativePointContactA };
+    const glm::vec3 pointContactBNew { positionBNew + orientationBNew * mRelativePointContactB };
+    const glm::vec3 deltaA { pointContactANew - mLastPointContactA };
+    const glm::vec3 deltaB { pointContactBNew - mLastPointContactB };
+    const glm::vec3 deltaAB { deltaA - deltaB };
+    const glm::vec3 deltaABTangent {
+        deltaAB - glm::dot(deltaAB, mContactNormal) * mContactNormal
+    };
+}
+```
+
+When static friction is in effect, `deltaABTangent` should be 0.  Accordingly, we can directly use `deltaABTangent`'s
+direction and magnitude as the direction and magnitude of the correction.
+
+```c++
+void CollisionConstraint::applyConstraintPosition(/* args */) {
+    // other stuff
+
+    // ...
+
+    const float lagrangeDeltaFriction {
+        -(
+            glm::length(deltaABTangent)
+        ) / (
+            generalizedInverseA + generalizedInverseB
+        )
+    };
+
+    // ...
+    // ...
+    // ...
+
+    // more stuff
+}
+```
+
+In our collision correction, we have a quantity `deltaLambdaCollision` proportional to the force along the contact normal between
+the two surfaces.  Conveniently, this means that any inequality that applies to the forces themselves also applies to this
+quantity.  Accordingly, we apply a positional correction _only_ when `mu_static * lagrangeDeltaCollision >= lagrangeDeltaFriction`:
+
+```c++
+void CollisionConstraint::applyConstraintPosition(/* args */) {
+    // other stuff
+
+    // ...
+    // ...
+    // ...
+
+    if(
+        !lagrangeDeltaFriction || (
+            glm::abs(lagrangeDeltaFriction)
+            >= glm::abs(combinedFrictionCoefficient * lagrangeDeltaCollision)
+        )
+    ) {
+        return;
+    }
+
+    // apply corrections
+    objectA = applyImpulseObject(
+        objectA,
+        physicsA,
+        positionalImpulseFriction,
+        pointContactANew
+    );
+    objectB = applyImpulseObject(
+        objectB,
+        physicsB,
+        -positionalImpulseFriction,
+        pointContactBNew
+    );
+
+    updateComponent(entityA, objectA);
+    updateComponent(entityB, objectB);
+}
+```
+
+>  **Note:**
+>
+>  For the `combinedFrictionCoefficient`, we can choose to use the average of the coefficient of friction of both objects,
+>  or their minimum, or their maximum.  In my implementation, I use the minimum.
+
+#### Dynamic friction
+
+_Dynamic friction_ (also, kinetic friction) in XPBD is modeled as a _velocity constraint._  While position constraints directly
+modify the positions of the objects, with velocities derived afterwards, velocity constraints directly update the derived
+velocities while leaving object positions and orientations untouched.
+
+Dynamic friction is directly proportional to the normal force at the point of contact between two objects, and does not exceed
+the force that would bring the objects to a stop.  Accordingly:
+
+```c++
+void CollisionConstraint::applyConstraintVelocity(float substepSeconds
+    const ObjectBounds& objectA, PhysicsState& physicsA,
+    const ObjectBounds& objectB, PhysicsState& physicsB
+) {
+    // cache position related stuff
+    const glm::vec3 positionA { objectA.getPositionWorld() };
+    const glm::vec3 positionB { objectB.getPositionWorld() };
+    const glm::quat orientationA { objectA.getOrientationWorld() };
+    const glm::quat orientationB { objectB.getOrientationWorld() };
+    const glm::vec3 contactPositionA { positionA + orientationA * mRelativePointContactA };
+    const glm::vec3 contactPositionB { positionB + orientationB * mRelativePointContactB };
+
+    // discover just how fast the contact points on each surface are moving
+    // relative to each other
+    const glm::vec3 pointVelocityA { physicsA.mVelocity + glm::cross(
+        physicsA.mAngularVelocity,
+        contactPositionA - positionA
+    ) };
+    const glm::vec3 pointVelocityB { physicsB.mVelocity + glm::cross(
+        physicsB.mAngularVelocity,
+        contactPositionB - positionB
+    ) };
+    const glm::vec3 pointVelocityAB { pointVelocityA - pointVelocityB };
+    const float bounceVelocity { glm::dot(pointVelocityAB, mContactNormal) };
+    const glm::vec3 tangentialVelocity {
+        pointVelocityAB - bounceVelocity * mContactNormal
+    };
+
+    // derive the impulse required to fix our velocities
+    const float lagrangeCollision { getLagrangeDelta().at(0) };
+    const float forceNormal { lagrangeCollision / (substepSeconds * substepSeconds) };
+    const glm::vec3 velocityCorrection {
+        -glm::normalize(tangentialVelocity) * glm::min(
+            glm::abs(substepSeconds * coefficientFrictionDynamic * forceNormal),
+            glm::length(tangentialVelocity)
+        )
+    };
+    const glm::vec3 impulseFriction {
+        velocityCorrection / (generalizedInverseA + generalizedInverseB)
+    };
+
+    // apply the impulse
+    physicsA = applyImpulsePhysics(
+        objectA,
+        physicsA,
+        impulseFriction,
+        contactPositionA
+    );
+    physicsB = applyImpulsePhysics(
+        objectB,
+        physicsB,
+        -impulseFriction,
+        contactPositionB
+    );
+}
+```
+
+The velocity correction impulses work a little differently from the position corrections.  I did need to find the proportion
+of the impulse that would affect the center of mass, which you see in `impulseLinear` below, to prevent the simulation from
+going haywire.  Here's what that update looks like:
+
+```c++
+PhysicsState applyImpulsePhysics(
+    const ObjectBounds& object,
+    PhysicsState physics,
+    const glm::vec3& impulsePositional,
+    const glm::vec3& impulsePoint
+) {
+    const glm::vec3 position { object.getPositionWorld() };
+    const glm::vec3 impulsePointRelative { impulsePoint - object.getPositionWorld() };
+    const glm::vec3 toCenter { glm::normalize(-impulsePointRelative) };
+    const glm::vec3 impulseLinear { glm::dot(impulsePositional, toCenter) * toCenter };
+    const glm::vec3 deltaVelocity { impulseLinear * physics.mMassInverse };
+    physics.mVelocity += deltaVelocity;
+
+    const glm::vec3 impulseRotational { glm::cross(
+        impulsePointRelative,
+        impulsePositional
+    ) };
+    physics = applyImpulsePhysics(object, physics, impulseRotational);
+
+    return physics;
+}
+
+PhysicsState applyImpulsePhysics(
+    const ObjectBounds& object,
+    PhysicsState physics,
+    const glm::vec3& impulseRotational
+) {
+    const glm::quat orientation { object.getOrientationWorld() };
+    const glm::vec3 impulseLocal { glm::inverse(orientation) * impulseRotational };
+    const glm::vec3 deltaVelocityAngular { orientation * (physics.mRotationalInertiaInverse * impulseLocal) };
+    physics.mAngularVelocity += deltaVelocityAngular;
+    return physics;
+}
+```
+
+Once we have both static and dynamic friction working, this is what we get:
+
+![A moving block slowing down and coming to a stop sliding down a gentle incline]({{- "/assets/images/slope-friction-1.gif" | relative_url -}})
+
+![Vertically offset balls colliding in the center of the screen being caused to spin by friction forces]({{- "/assets/images/collision-3.gif" | relative_url -}})
+
+## A note about broad phase collision detection
+
+While [GJK](https://en.wikipedia.org/wiki/Gilbert%E2%80%93Johnson%E2%80%93Keerthi_distance_algorithm) and [EPA](https://winter.dev/articles/epa-algorithm/)
+are very good for what they are, they are pretty computationally expensive.  We'll want to perform them as little as
+possible.
 
