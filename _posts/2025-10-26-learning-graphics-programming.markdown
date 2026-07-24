@@ -9,7 +9,7 @@ image_alt: "The route over which players compete in The Royal Game of Ur"
 excerpt_separator: <!--end excerpt-->
 ---
 
-I've been working on my own game and game engine for the better part of the last 2 years.  I finished work on the engine essentials in June this year, and in the last couple of months wrote a simple (not original) game on top of it, to showcase the engine in action.
+I've been working on my own game and game engine for the better part of the last 2 years, and I wanted to show it off.
 
 <!--end excerpt-->
 

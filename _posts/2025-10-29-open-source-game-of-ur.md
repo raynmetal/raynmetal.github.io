@@ -9,7 +9,7 @@ image_alt: "The route over which players compete in The Royal Game of Ur."
 excerpt_separator: <!--end excerpt-->
 ---
 
-I adapted a version of the Royal Game of Ur using my custom 3D game engine, ToyMaker.  Both the engine and the game are programmed in C++, and make prodigious use of the SDL, Nlohmann JSON and GLM libraries, and the OpenGL graphics API.
+I adapted a version of the Royal Game of Ur using my custom 3D C++ & OpenGL game engine, ToyMaker.
 
 <!--end excerpt-->
 

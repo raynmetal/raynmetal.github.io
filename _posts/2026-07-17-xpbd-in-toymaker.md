@@ -10,10 +10,8 @@ image_alt: "Moving block slowing down and coming to a halt sliding down a gentle
 excerpt_separator: <!--end excerpt-->
 ---
 
-I decided to add physics to my game engine, now named ["ToyMaker"](https://github.com/raynmetal/toymaker).  In the interest
-of learning, I decided to implement it from scratch.  While there's still a lot I'd like to improve, I now have a semi-complete,
-realtime, single-threaded CPU rigid body solver based on [Extended Position Based Dynamics,](https://matthias-research.github.io/pages/publications/PBDBodies.pdf)
-or XPBD for short.
+I decided to add physics to my game engine, now named ["ToyMaker"](https://github.com/raynmetal/toymaker) based on [Extended Position
+Based Dynamics.](https://matthias-research.github.io/pages/publications/PBDBodies.pdf)
 
 <!--end excerpt-->
 
