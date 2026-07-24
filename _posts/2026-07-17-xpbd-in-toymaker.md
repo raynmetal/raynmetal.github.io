@@ -1,6 +1,6 @@
 ---
 layout: post
-title: "Adding XPBD-based Physics to ToyMaker"
+title: "Adding XPBD-Based Rigid Body Physics to ToyMaker"
 toc: true
 date: 2026-7-17 14:00:00 +0530
 categories: blog technical
@@ -24,7 +24,7 @@ holds a big bag of data relating to the purpose of the game, and it allows a use
 ways, periodically showing them the results of their modifications.
 
 The physics engine is the system in the game that attempts to model _physical phenomena,_ i.e.,  forces causing a
-change in an object's velocity, and the object's velocity should causing in its position, etc.  Out of the bag
+change in an object's velocity, and the object's velocity causing a change in its position, etc.  Out of the bag
 of data that represents the game, then, in order to represent a particular _"physical"_ object, we might have:
 
 -  The object's _position_ (as a list of 3 floats) and _orientation_ (as a 4 float [quaternion](https://www.youtube.com/watch?v=zjMuIxRvygQ)).
@@ -32,7 +32,7 @@ of data that represents the game, then, in order to represent a particular _"phy
 -  The _kinematic properties_ of the object, i.e., its _positional_ and _angular velocities_, each as a list of 3 floats.
 
 -  The _forces_ acting on the object, represented as the _sum force_ acting on its _center of mass,_ and the _sum torque_ around
-_an axis passing through its center of mass._
+_an axis passing through its center of mass,_ also as 3 float vectors.
 
 -  The _physical properties_ of the object -- its _mass,_ _rotational inertia,_ _static_ and _dynamic friction coefficients,_ its
 _shape,_ and so on.
@@ -74,22 +74,22 @@ Here's what that looks like for some of the values from the table above, in a si
 
 Where:
 
-- the velocity update:
+-  the velocity update:
     1.  `newVel = vel + frce * timestep / mass`
     2.  `newVel = (0, -1, 0) + (0, -10, 0) * 0.016 / 1.0`
     3.  `newVel = (0, -1.16, 0)`
 
-- the position update:
+-  the position update:
     1.  `newPos = pos + newVel * timestep`
     2.  `newPos = (0, 5.0, 0) + (0, -1.16, 0) * 0.016`
     3.  `newPos = (0, 4.98144, 0)`
 
-Picture such an update happening 60 times a second for this object _and every other object in the game,_ each
+Picture such an update happening 60 times a second for this object _and every other "physical" object in the game,_ each
 represented in much the same way, and you now have a rough idea of what a physics engine does.
 
-## The physics update
+### The physics update
 
-### Physics state
+#### Physics state
 
 We've already seen the table representing much of the data that we'll want to associate with an object in order to be able
 to physically model that object.  [ToyMaker's ObjectBounds component,](https://raynmetal.github.io/toymaker/structToyMaker_1_1ObjectBounds.html)
@@ -168,10 +168,11 @@ struct PhysicsState {
 
 You can find a more complete description of the struct [here.](https://raynmetal.github.io/toymaker/structToyMaker_1_1PhysicsState.html#a60b087dacb5a196a2990a88b4710e21e)
 
-### The integration function (also called "prediction step")
+#### The integration function
 
-So now that we have a representation for our object's physics state, our next step is to write an _integration function_ to
-get our objects moving.  The integration function is called once per timestep, and looks something like this:
+Now that we have a representation for our object's physics state, our next task is to write an _integration function_ --
+also called a _"prediction step"_ in [XPBD](https://matthias-research.github.io/pages/publications/PBDBodies.pdf) -- to get
+our objects moving.  The integration function is called once per timestep, and looks something like this:
 
 1.  For each object:
 
@@ -252,20 +253,20 @@ Here's a clip of two balls colliding:
 
 ![A clip of two balls moving towards each other at fixed velocities, then intersecting instead of bouncing]({{- "/assets/images/collision-0.gif" | relative_url -}})
 
-... well not really.  There are a couple of problems here:
+... well, not really.  There are a couple of problems here:
 
-1.  Visually, it's quite clear to us that the two balls are intersecting, and that they _shouldn't._  But try to imagine
-what the computer sees.  Or better still, look:
+1.  Visually, it's quite clear to _us_ that the two balls are intersecting, and that _they shouldn't._  But try to imagine
+what the computer sees.  Or better still, take a look:
 
     | Name  | Type   |   Value       |
     |-------|--------|---------------|
     | pos1  | `flt3` | -0.836, 0, 0  |
-    | ori1  | `quat` | 1, 0, 0, 0    |
-    | shp1  | `enum` | SPHERE        |
-    | rdus1 | `flt`  | 1.0           |
     | pos2  | `flt3` | 0.836, 0, 0   |
+    | ori1  | `quat` | 1, 0, 0, 0    |
     | ori2  | `quat` | 1, 0, 0, 0    |
+    | shp1  | `enum` | SPHERE        |
     | shp2  | `enum` | SPHERE        |
+    | rdus1 | `flt`  | 1.0           |
     | rdus2 | `flt`  | 1.0           |
 
     The fact that the balls in the demo are intersecting is slightly more difficult to see in this form.  Even
@@ -280,7 +281,7 @@ what the computer sees.  Or better still, look:
 
     >  **Note**
     >
-    >  Concave shapes are quite often represented as groups of convex shapes in realtime physics engines.  That means that
+    >  Concave shapes are usually represented as groups of convex shapes in realtime physics engines.  That means that
     >  this pair of algorithms can help us represent and use _any_ sensible 3D shape we can imagine in our physics engine.
 
     These two are certainly worth writeups of their own, but they've already been covered extensively by other people, so
@@ -297,7 +298,7 @@ Computer simulations that attempt to model physical phenomena use a class of alg
 basic idea here is that, while it is difficult to entirely prevent inaccuracies (or _errors_) in realtime simulations, what
 we can more easily do is:
 
-1.  Discover the error when it has occurred:
+1.  Discover the error when it occurs:
 
     -  In our earlier example, an _intersection between two shapes_ occurred (which we know shouldn't happen, making it an
     error), and we were able to determine the _location,_ _direction,_ and _magnitude_ of the intersection.
@@ -314,13 +315,14 @@ we can more easily do is:
     1.  Compute the forces it would take to effect a correction to the objects involved in the error in as few steps as
     possible, then apply them to the objects, _resolving the error during our usual physics integration step._
 
-    2.  _Apply corrections to the objects right away,_ and derive what forces would have caused the correction _after_ the
-    correction has been applied (if required).
+    2.  _Apply position corrections to the objects right away,_ and derive what forces would have caused the correction _after_
+    the correction has been applied (if required).
 
 The former approach is the one that has been popular in the kind of realtime physics simulations we've seen in video games
-for a long time.  While there's plenty of material talking about this approach, I haven't studied it and so can't really
-comment. From what I understand, [Brian Mirtich's Impulse-based Dynamic Simulation of Rigid Body Systems -- 1996](https://people.eecs.berkeley.edu/~jfc/mirtich/impulse.html)
-is the place to start.  This category of constraint solver is called an _impulse-based solver._
+for a long time.  This type of constraint solver is called an _impulse-based solver._  While there's plenty of material
+talking about this approach, I haven't studied it and so can't really comment. From what I understand, [Brian Mirtich's
+Impulse-based Dynamic Simulation of Rigid Body Systems -- 1996](https://people.eecs.berkeley.edu/~jfc/mirtich/impulse.html)
+is the place to start learning about them.
 
 [Detailed Rigid Body Simulation with Extended Position Based Dynamics - Matthias Müller, Miles Macklin, Nuttapong Chentanez,
 Stefan Jeschke, Tae-Yong Kim](https://matthias-research.github.io/pages/publications/PBDBodies.pdf) takes the latter approach,
@@ -500,11 +502,14 @@ correction.
 
     >  **Note:**
     >
-    >  In equations _(10)_ and onwards, the paper uses `lambda` when I _think_ what is meant is `deltaLambda`.  For
-    >  collision constraints (and presumably other stiff constraints), `lambda` gives overly large values for contact
-    >  forces, while `deltaLambda` produces more reasonable ones.
+    >  Here, my implementation diverges from [the paper.](https://matthias-research.github.io/pages/publications/PBDBodies.pdf)
     >
-    >  This becomes especially important when it comes to computing frictional forces and restitution corrections.
+    >  In equations _(10)_ and onwards, the paper uses `lambda`.  For collision constraints, I find that`lambda` gives overly
+    >  large values for contact forces, while `deltaLambda` produces more reasonable ones. This is particularly important when
+    >  it comes to computing frictional forces and restitution corrections.
+    >
+    >  I'm not sure whether `lambda` is the quantity used, or whether every instance of `lambda` should be interpreted as
+    >  `deltaLambda` in general.
 
 -  We take the _Lagrange multiplier delta_ scalar and _correction direction_ vector together to get the _positional
 correction impulse._
@@ -558,7 +563,7 @@ ObjectBounds applyImpulseObject(
 >  **Note**
 >
 >  While not covered here, separating the rotational part of the position correction out from the positional part
->  allows us to reuse the rotational correction function for angular constraints.
+>  allows us to reuse the rotational correction function for generic angular constraints.
 
 #### Modifications to the physics update
 
@@ -915,6 +920,9 @@ void CollisionConstraint::applyConstraintPosition(/* args */) {
             generalizedInverseA + generalizedInverseB
         )
     };
+    const glm::vec3 positionalImpulseFriction {
+        lagrangeDeltaFriction * glm::normalize(deltaABTangent)
+    };
 
     // ...
 
@@ -969,8 +977,12 @@ void CollisionConstraint::applyConstraintPosition(/* args */) {
 #### Dynamic friction
 
 Dynamic friction (also, kinetic friction) _opposes_ the relative motion of two objects in contact with each other.
-In XPBD, this force is modeled as a _velocity constraint._  Once we've derived the velocities for the two participants,
-we measure the distance moved by their relative points of contact to find their relative tangential velocity.
+In XPBD, this force is modeled as a _velocity constraint._  This means that rather than changing the object
+position, then seeing the result of the correction in the velocity derivation step, we directly modify the
+velocity to perform the constraint correction.
+
+Once we've derived the velocities for the two participants, we measure the distance moved by their relative points of
+contact to find their relative tangential velocity.
 
 ```c++
 void CollisionConstraint::applyConstraintVelocity(/* args */) {
@@ -1002,7 +1014,7 @@ void CollisionConstraint::applyConstraintVelocity(/* args */) {
 
 Dynamic friction is also directly proportional to the normal force at the point of contact between two objects (see
 [coefficient of kinetic friction](https://www.britannica.com/science/kinetic-friction)) and does not exceed the force
-that would bring the objects to a stop.
+that would bring the objects to a halt.  Here's what that update looks like:
 
 ![A diagram showing the computation of the dynamic friction velocity correction visually]({{- "/assets/images/diagram-dynamic-friction-correction.svg" | relative_url -}})
 
@@ -1064,9 +1076,13 @@ void CollisionConstraint::applyConstraintVelocity(float substepSeconds
 }
 ```
 
-The velocity correction impulses work a little differently from the position corrections.  I did need to find the proportion
-of the impulse that would affect the center of mass, which you see in `impulseLinear` below, to prevent the simulation from
-going haywire.  Here's what that update looks like:
+>  **Note:**
+>
+>  My implementation diverges a little from the formulae shown in _(33),_ in [the paper,](https://matthias-research.github.io/pages/publications/PBDBodies.pdf)
+>  here.
+>
+>  I did need to find the proportion of the impulse that would affect the center of mass, which you see in `impulseLinear`
+>  below, to keep the simulation from misbehaving.
 
 ```c++
 PhysicsState applyImpulsePhysics(
@@ -1104,33 +1120,106 @@ PhysicsState applyImpulsePhysics(
 }
 ```
 
-Once we have both static and dynamic friction correctly set up, this is what we get:
+>  **Note:**
+>
+>  While not covered in this post, you can use the same type of velocity constraint to model [restitution.](https://en.wikipedia.org/wiki/Coefficient_of_restitution)
+
+#### One more physics update update
+
+The velocity correction applies _after_ the velocity derivation step.  Our high level physics substep loop must change accordingly:
+
+```c++
+void PhysicsSystem::onSimulationStep(uint32_t timestepMillis) {
+    // other stuff
+
+    // ...
+
+    for(auto substep { 0 }; substep < mSubsteps; ++substep) {
+        // prediction step and position constraints
+
+        // ...
+
+        deriveVelocities(substepInterval);
+
+        // !!!!!! -> here's where we'll call our applyConstraintVelocity function
+        applyVelocityConstraints(substepInterval);
+    }
+
+    // ...
+
+    // more stuff
+}
+```
+
+Once we have both static and dynamic friction correctly set up, this is what we finally get:
 
 ![A moving block slowing down and coming to a stop sliding down a gentle incline]({{- "/assets/images/slope-friction-1.gif" | relative_url -}})
 
 ![Vertically offset balls colliding in the center of the screen being caused to spin by friction forces]({{- "/assets/images/collision-3.gif" | relative_url -}})
 
+
 ## A note about broad phase collision detection
 
 While [GJK](https://en.wikipedia.org/wiki/Gilbert%E2%80%93Johnson%E2%80%93Keerthi_distance_algorithm) and [EPA](https://winter.dev/articles/epa-algorithm/)
-are very good for what they are, they are pretty computationally expensive.  We'll want to minimize the number of times
-we perform these operations as much as possible.
+are very good for what they are, they are quite computationally expensive.  We'll want to minimize the number of times
+we perform these operations as much as possible so that our simulation runs well in real time.
 
 ![Framerate drop from having to update too many physics objects, balls filling an invisible container.]({{- "/assets/images/many-collisions-0.gif" | relative_url -}})
 
 [ToyMaker](https://github.com/raynmetal/toymaker) already has a [spatial query system](https://raynmetal.github.io/toymaker/group__ToyMakerSpatialQuerySystem.html)
 that allows us to make fast [AABB](https://developer.mozilla.org/en-US/docs/Games/Techniques/3D_collision_detection) queries
-about the scene.  It does this by storing object AABBs in a hierarchical data structure called an [Octree,](https://en.wikipedia.org/wiki/Octree)
-although there are many other [spatial indexing structures](https://en.wikipedia.org/wiki/Spatial_database#Spatial_index) one might
-use instead.
+about the scene.  It does this by storing object AABBs in a hierarchical data structure called an [Octree.](https://en.wikipedia.org/wiki/Octree)
+There are many other [spatial indexing structures](https://en.wikipedia.org/wiki/Spatial_database#Spatial_index) one can use
+instead, however.
 
-We can use it on each physics object to discover, given the object's speed, what other objects it will be likely to collide with
-within the next physics update.  We can then creat collision constraints for this frame only for the pairs found through this
-query. A combination of this technique, as well as a technique called [Sweep-and-Prune,](https://leanrada.com/notes/sweep-and-prune/)
+We can make a spatial query with each physics object to discover, given the object's velocity, what other objects it's likely
+to collide with within the next physics update.  We can then create collision constraints for this frame only for the pairs
+found through this query. A combination of this technique, as well as a technique called [Sweep-and-Prune,](https://leanrada.com/notes/sweep-and-prune/)
 applied at each substep, improves the simulation's performance tremendously.
 
 ![Balls in the middle of filling an invisible box]({{- "/assets/images/many-collisions-2.gif" | relative_url -}})
 
 ![Balls near the end of filling an invisible box]({{- "/assets/images/many-collisions-3.gif" | relative_url -}})
 
+Techniques that perform a computationally cheaper, but coarser kind of collision detection so as to reduce the usage
+of more accurate but expensive collision detection methods are collectively called [Broad-Phase Collision Detection
+techniques.](https://developer.nvidia.com/gpugems/gpugems3/part-v-physics-simulation/chapter-32-broad-phase-collision-detection-cuda)
+
+## References
+
+-  [Physics introduction - Godot Engine 4.7 documentation in English](https://docs.godotengine.org/en/stable/tutorials/physics/physics_introduction.html#using-rigidbody2d)
+-- An overview of physics data as represented in Godot, useful for learning how popular engines tackle this task.
+
+-  [Object/Object Intersections - realtimerendering.com](https://www.realtimerendering.com/intersections.html)
+-- An extensive collection of links to intersection test techniques for different pairs of shapes.
+
+-  [Implementing GJK (2006) - Casey Muratori](https://www.youtube.com/watch?v=Qupqu1xe7Io) -- Video lecture giving a simple breakdown of how
+GJK works, and how it can be implemented.
+
+-  [Computing Distance - Catto Erin](https://box2d.org/files/ErinCatto_GJK_GDC2010.pdf) -- Slides that are presumably connected with a talk given at GDC, whose video is no longer
+available.  Covers everything from GJK's rationale to its implementation in easy non-academic language, with plenty of diagrams.
+
+-  [Game Physics: Contact Generation - EPA](https://allenchou.net/2013/12/game-physics-contact-generation-epa/) -- Article describing the Expanding
+Polytope Algorithm, or EPA, for finding collision contact points using the simplex found with GJK.
+
+-  [Detailed Rigid Body Simulation with Extended Position Based Dynamics - Matthias Müller, Miles Macklin, Nuttapong Chentanez,
+Stefan Jeschke, Tae-Yong Kim](https://matthias-research.github.io/pages/publications/PBDBodies.pdf) -- The paper on the realtime physics
+simulation approach, XPBD, talked about in this article.
+
+-  [Ten Minute Physics - Matthias Müller](https://matthias-research.github.io/pages/tenMinutePhysics/index.html) -- Index of educational physics
+programming videos, many of them closely connected with the XPBD paper.
+
+-  [Impulse-Based Dynamic Simulation - Brian Mirtich](https://people.eecs.berkeley.edu/~jfc/mirtich/impulse.html) -- A paper on impulse-based
+physics solvers as seen in most current physics engines.  The appendix contains a very useful collection of derivations for various 3D physics
+formulae.
+
+-  [Introduction to Octrees](https://gamedev.net/tutorials/programming/general-and-gameplay-programming/introduction-to-octrees-r3529) --
+An introduction to spatial partitioning algorithms in general, with a guide to building octrees in particular.
+
+-  [Advanced Octrees 3: non-static Octrees - David Geier](https://geidav.wordpress.com/2014/11/18/advanced-octrees-3-non-static-octrees/)
+-- A very short article which talks about how to dynamically update the region encompassed by an octree in response
+to changes in a scene.
+
+-  [Sort, sweep, and prune: Collision detection - leanrada](https://leanrada.com/notes/sweep-and-prune/) -- An explanation of Sweep-and-Prune, a
+popular broad-phase collision detection algorithm.
 
