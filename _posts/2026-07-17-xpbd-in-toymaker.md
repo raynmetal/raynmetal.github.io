@@ -10,7 +10,7 @@ image_alt: "Moving block slowing down and coming to a halt sliding down a gentle
 excerpt_separator: <!--end excerpt-->
 ---
 
-I decided to add physics to my game engine, now named ["ToyMaker"](https://github.com/raynmetal/toymaker) based on [Extended Position
+I decided to add physics to my game engine, now named ["ToyMaker,"](https://github.com/raynmetal/toymaker) based on [Extended Position
 Based Dynamics.](https://matthias-research.github.io/pages/publications/PBDBodies.pdf)
 
 <!--end excerpt-->
