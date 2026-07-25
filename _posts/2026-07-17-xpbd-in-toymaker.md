@@ -279,7 +279,7 @@ what the computer sees.  Or better still, take a look:
     >  Concave shapes are usually represented as groups of convex shapes in realtime physics engines.  That means that
     >  this pair of algorithms can help us represent and use _any_ sensible 3D shape we can imagine in our physics engine.
 
-    Check the links at the end of this post.
+    Check out the links at the end of this post for more.
 
 2.  Assuming that we _can_ get our hands on information about the contact, how do we modify the motion of the objects such that
 they believably comply with physical laws?
@@ -1199,7 +1199,7 @@ the Expanding Polytope Algorithm, or EPA, for finding collision contact points u
 Stefan Jeschke, Tae-Yong Kim](https://matthias-research.github.io/pages/publications/PBDBodies.pdf) -- The paper on the realtime physics
 simulation approach, XPBD, talked about in this article.
 
--  [Ten Minute Physics - Matthias Müller](https://matthias-research.github.io/pages/tenMinutePhysics/index.html) -- Index of educational physics
+-  [Ten Minute Physics - Matthias Müller](https://matthias-research.github.io/pages/tenMinutePhysics/index.html) -- Collection of educational physics
 programming videos, many of them closely connected with the XPBD paper.
 
 -  [Impulse-Based Dynamic Simulation - Brian Mirtich](https://people.eecs.berkeley.edu/~jfc/mirtich/impulse.html) -- A paper on impulse-based
