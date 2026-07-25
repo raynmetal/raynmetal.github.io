@@ -413,12 +413,12 @@ For a general position constraint involving 2 participants, we compute a scalar 
 update,_ whose formulae are rendered in C++ syntax below:
 
 ```c++
-// before the first position solve:
+// for each substep, before the first position solve iteration:
 float lambda = 0.f;
 
 // ...
 
-// for every other solve, for all active constraints
+// for every other iteration (NOT substep), for all active constraints
 const float deltaLambda = (
     (
         -c - alpha / (timestep * timestep) * lambda
@@ -496,14 +496,12 @@ correction.
 
     >  **Note:**
     >
-    >  Here, my implementation diverges from [the paper.](https://matthias-research.github.io/pages/publications/PBDBodies.pdf)
+    >  [The paper](https://matthias-research.github.io/pages/publications/PBDBodies.pdf) refers to computing the overall position
+    >  correction (and Lagrange multiplier value) over the course of several iterations within a substep, although it discourages
+    >  doing this.
     >
-    >  In equations _(10)_ and onwards, the paper uses `lambda`.  For collision constraints, I find that`lambda` gives overly
-    >  large values for contact forces, while `deltaLambda` produces more reasonable ones. This is particularly important when
-    >  it comes to computing frictional forces and restitution corrections.
-    >
-    >  I'm not sure whether `lambda` is the quantity used, or whether every instance of `lambda` should be interpreted as
-    >  `deltaLambda` in general.
+    >  My implementation only substeps, and doesn't solve position constraints iteratively.  This means that we can effectively
+    >  substitute `deltaLambda` for `lambda` in most of the formulae in the paper.
 
 -  We take the _Lagrange multiplier delta_ scalar and _correction direction_ vector together to get the _positional
 correction impulse._
@@ -905,7 +903,7 @@ void CollisionConstraint::applyConstraintPosition(/* args */) {
     // other stuff
 
     // ...
-
+    const float lagrangeFriction { getLagrange().at(1) };
     const float lagrangeDeltaFriction {
         -(
             glm::length(deltaABTangent)
@@ -913,6 +911,10 @@ void CollisionConstraint::applyConstraintPosition(/* args */) {
             generalizedInverseA + generalizedInverseB
         )
     };
+
+    // ... guard: condition for applying static friction ...
+
+    applyLagrangeDelta(lagrangeDeltaFriction, 1);
     const glm::vec3 positionalImpulseFriction {
         lagrangeDeltaFriction * glm::normalize(deltaABTangent)
     };
@@ -936,12 +938,17 @@ void CollisionConstraint::applyConstraintPosition(/* args */) {
 
     if(
         !lagrangeDeltaFriction || (
-            glm::abs(lagrangeDeltaFriction)
-            >= glm::abs(combinedFrictionCoefficient * lagrangeDeltaCollision)
+            glm::abs(lagrangeDeltaFriction + lagrangeFriction)
+            >= glm::abs(combinedFrictionCoefficient * (lagrangeDeltaCollision + lagrangeCollision))
         )
     ) {
         return;
     }
+
+    applyLagrangeDelta(lagrangeDeltaFriction, 1);
+    const glm::vec3 positionalImpulseFriction {
+        lagrangeDeltaFriction * glm::normalize(deltaABTangent)
+    };
 
     // apply corrections
     objectA = applyImpulseObject(
@@ -1041,7 +1048,7 @@ void CollisionConstraint::applyConstraintVelocity(float substepSeconds
     };
 
     // derive the impulse required to fix our velocities
-    const float lagrangeCollision { getLagrangeDelta().at(0) };
+    const float lagrangeCollision { getLagrange().at(0) };
     const float forceNormal { lagrangeCollision / (substepSeconds * substepSeconds) };
     const glm::vec3 velocityCorrection {
         -glm::normalize(tangentialVelocity) * glm::min(
