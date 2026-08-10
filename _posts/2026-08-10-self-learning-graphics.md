@@ -252,11 +252,11 @@ to solve problems with the language.
 
 Most of your learning will probably happen through random google searches while solving problems.
 
-- **[Introduction to Data Structures](https://www.geeksforgeeks.org/dsa/introduction-to-data-structures/) -** Exactly what
-it says.  Make sure you know what each of these are, and that you know how to use them.
+- **[Introduction to Data Structures](https://www.geeksforgeeks.org/dsa/dsa-tutorial-learn-data-structures-and-algorithms/) -**
+Index of data structures and algorithms tutorials.  Use as reference while solving programming challenges in LeetCode.
 
   - Look up each structure individually, use standard implementations when available, but consider
-  how you would implement them yourself (and try to do so at least once).
+  how you would implement them yourself.  Try to do so at least once.
 
 - **[LeetCode Top Interview 150](https://leetcode.com/studyplan/top-interview-150/) -** A list of 150 programming
 puzzles designed to test basic data structures and algorithms knowledge.
@@ -267,10 +267,10 @@ puzzles designed to test basic data structures and algorithms knowledge.
 #### Frameworks & Tools
 
 - **[Bash Tutorial](https://www.w3schools.com/bash/) -** If you're on Linux or MacOS, you'll want to read this.
-You'll be spending quite a lot of time on the command line.
+You'll be spending quite a lot of time at the command line.
 
 - **[PowerShell 101 Introduction](https://learn.microsoft.com/en-us/powershell/scripting/learn/ps101/00-introduction?view=powershell-7.6) -**
-If you're on Windows, you'll want to read this. You'll be spending quite a lot of time on the command line.
+If you're on Windows, you'll want to read this. You'll be spending quite a lot of time at the command line.
 
 - **[Pro Git](https://git-scm.com/book/en/v2) -** Extremely popular versioning tool.
 
