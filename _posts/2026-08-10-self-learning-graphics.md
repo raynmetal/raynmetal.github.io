@@ -2,7 +2,7 @@
 layout: post
 title: "Beginner Graphics Programming Study Guide"
 toc: true
-date: 2026-8-10 16:15:00 +0530
+date: 2026-8-10 16:25:00 +0530
 categories: blog technical
 tags: [C++, SDL, OpenGL, 3D, Game Engine]
 image: /assets/images/refractive-backpack.png
