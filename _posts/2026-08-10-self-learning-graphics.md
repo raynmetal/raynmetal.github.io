@@ -10,7 +10,7 @@ image_alt: "A backpack floating in the sky, refracting light from its environmen
 excerpt_separator: <!--end excerpt-->
 ---
 
-This is a roadmap for learning the basics of graphics programming on one's own, from open online resources.
+This is a roadmap for learning the basics of graphics programming on one's own, from free online resources.
 
 <!--end excerpt-->
 
@@ -18,7 +18,7 @@ This is a roadmap for learning the basics of graphics programming on one's own, 
 
 ### About
 
-This is a roadmap for learning basic graphics programming on one's own, from open online resources.  While graphics as a
+This is a roadmap for learning basic graphics programming on one's own, from free online resources.  While graphics as a
 field isn't tied to any specific programming language, tool, platform, or graphics API, for this guide I've chosen to use:
 
 - ``C++``: Programming language in which CPU side code is written; the bulk of what we call programming tends to just
@@ -49,7 +49,7 @@ converting it into instructions for forming a coherent image on a monitor.
 Broadly, there are 4 pieces of hardware involved in rendering an image to the screen:
 
 - **CPU:** Computer unit executing instructions linearly.  It is _very_ good at this, and works very closely with memory
-to accomplish its tasks.  Also responsible for orchestrating activities primarily executed on other devices via memory.
+to accomplish its tasks.  Also responsible for orchestrating activities primarily executed on other devices _via_ memory.
 
 - **Memory:** In programming terms, this is a massive array of linearly indexed values, used to store both
 program instructions and data.  Quite often, it also acts as the means of communication between the CPU and
@@ -74,13 +74,13 @@ GUI can be drawn on.
 2. The CPU reads or generates data intended for being rendered to the screen into memory.  What this data is depends on the
 domain of the application.
 
-    - For 2D, this usually means 2D coordinates (2 float values, textures (images conforming to some constraints), text (text formats
-      tend to also be stored as 2D coordinates on a specialized grid).
+    - For 2D, this usually means 2D coordinates (2-float values), textures (images conforming to some constraints), text (which are also
+      often just 2D coordinates on a specialized grid).
 
     - For 3D:
 
-        - 3D models made up of a list of 3D coordinates where each coordinate is defined as 3 float values, each value representing
-        a position on X, Y, or Z axis.
+        - 3D models made up of a list of 3D coordinates where each coordinate is defined as 3-float values, each float value representing
+        a position on the X, Y, or Z axis.
 
         - Faces; indices referencing items in the 3D coordinate list, where every 3 coordinates make up the corners of a triangle.
 
@@ -91,9 +91,9 @@ data.
 
 4. The GPU processes this data according to the program, and writes the results to the 2D array of values provided by the monitor.
 
-5. The monitor reads the values in the array and changes the colors and intensities of the colors as specified.  How often
-this happens depends on the refresh rate of the monitor; a monitor with a rate of 60 Hz will perform this update 60 times
-a second.
+5. The monitor reads the values in the array and changes the colors and intensities of its light grid as specified.  How often
+this happens depends on the refresh rate of the monitor; a monitor with a rate of 60 Hz will perform this update 60 times a
+second.
 
 These steps take place as many times as is needed for the program, constrained by the refresh rate of the monitor.
 
@@ -275,8 +275,8 @@ If you're on Windows, you'll want to read this. You'll be spending quite a lot o
 - **[Pro Git](https://git-scm.com/book/en/v2) -** Extremely popular versioning tool.
 
   - This barely requires an introduction.  If you have a project, and you want to be able to roll back
-  to an older version of it if a new version breaks something, this is your tool.  If you want to collaborate
-  with multiple developers, again, this is your tool.
+  to an older version when a new version breaks something, this is your tool.  If you want to collaborate
+  with several other developers, again, this is your tool.
 
   - Chapters 1-3 are by far the most important.  7 is worth looking at, but not essential.  The rest are less broadly
   applicable, so study them at your own discretion.
@@ -334,7 +334,7 @@ ubiquitous build system for C++.
 - **[Model View Projection - J Santell](https://jsantell.com/model-view-projection/) -** High level overview of what the most commonly used
 matrices in 3D rendering actually do.
 
-  - Each matrix has a distinct purpose here.
+  - Each matrix serves a distinct purpose here.
 
     - Model - Moves an object's vertices to its world space coordinates
 
@@ -347,7 +347,7 @@ matrices in 3D rendering actually do.
   - **Very important.**
 
 - **[(advanced) Homogenous Coordinates](https://www.youtube.com/watch?v=MQdm0Z_gNcw) -** Talks about what that extra component in
-a position or a direction vector actually means.
+a position or direction vector actually means.
 
   - Again, why take it on faith that you set a 1.0 for points and 0.0 for vectors in the w-coordinate when you
   can know for sure what it actually does?
