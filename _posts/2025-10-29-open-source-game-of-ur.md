@@ -1,6 +1,6 @@
 ---
 layout: post
-title:  "Open Source Game of Ur (2023-2025)"
+title:  "Open Source Game of Ur (2023-2026)"
 date:   2025-10-29 14:00:00 +0530
 categories: project personal
 tags: [Game of Ur, C++, SDL, OpenGL, 3D, Deferred Shading, MinGW, CMake, Game Engine, Linear Algebra]
@@ -19,7 +19,7 @@ I adapted a version of the Royal Game of Ur using my custom 3D C++ & OpenGL game
 
 ![A small clip from the game showing a player's piece moving along the board to displace an opponent piece.]({{- "/assets/images/2025-10-UrMovingStormbirdDisplacingOpponent.gif" | relative_url -}})
 
-You can download and play the game from [the releases page of the project repo.](https://github.com/raynmetal/game-of-ur/releases)
+You can download and play the game from the [game's Itch.io page,](https://raynmetal.itch.io/game-of-ur) or [the releases page of the project repo.](https://github.com/raynmetal/game-of-ur/releases)
 
 Game of Ur is a competitive, two-player board game. The player who moves all 5 of their pieces to the end of the course first, wins the game. The variant implemented in this adaptation is based on a paper by Irving Finkel. See the [game design document](https://raynmetal.github.io/game-of-ur/md_docs_2systems_2game-of-ur_201__design__doc.html) for more information.
 
