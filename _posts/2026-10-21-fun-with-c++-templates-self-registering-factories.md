@@ -510,7 +510,7 @@ from FromInt
 You'll also see that the [ToyMaker's resource database header](https://github.com/raynmetal/toymaker/blob/main/ToyMaker_Main/include/toymaker/engine/core/resource_database.hpp)
 follows an extremely similar pattern, but fitted to the engine's requirements.
 
-Feel free to modify [the example,](https://www.youtube.com/watch?v=Am2is2QCvxY) adding
+Feel free to modify [the example,](https://godbolt.org/z/d1T7o14zj) adding
 more resources and constructors to it as you please!  I hope you'll find it a fairly
 flexible implementation, and can be used with effect outside of game engines.
 
