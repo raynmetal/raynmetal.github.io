@@ -24,8 +24,8 @@ created.  A sphere model, for example, may be [generated procedurally,](https://
 or might be [loaded from from a file.](https://raynmetal.github.io/toymaker/classToyMaker_1_1StaticModelFromFile.html)
 
 The overall flow would be this - the game developer imports the assets they want to use for
-a particular scene (by [specifying it as a JSON object in an array).](https://raynmetal.github.io/toymaker/md_docs_2toymaker-engine_2scene__system.html#autotoc_md70)
-When a named asset is needed by a scene object, it would refer to it by its name.  The
+a particular scene (by [specifying it as a JSON object in an array](https://raynmetal.github.io/toymaker/md_docs_2toymaker-engine_2scene__system.html#autotoc_md70)
+).  When a named asset is needed by a scene object, it would refer to it by its name.  The
 [Resource Database](https://raynmetal.github.io/toymaker/md_docs_2toymaker-engine_2core_2resource__database.html)
 would then dispatch a call to the appropriate constructor class for that kind of asset.
 The database would need to know about every type of resource it might be asked to
@@ -90,8 +90,7 @@ known to the ResourceDatabase, and if they could be defined outside the library 
 
 ## The Solution
 
-Enter the [self registering factory.](https://raynmetal.github.io/toymaker/md_docs_2toymaker-engine_2core_2resource__database.html)
-Through a bit of [template metaprogramming](https://www.youtube.com/watch?v=Am2is2QCvxY)
+Enter the self registering factory. Through a bit of [template metaprogramming](https://www.youtube.com/watch?v=Am2is2QCvxY)
 trickery, utilizing the [dynamic initialization step for static data members](https://en.cppreference.com/cpp/language/initialization)
 executed as a part of a program's start up, we can make it so that resource and
 constructor declarations declared in one file automatically report themselves to our
