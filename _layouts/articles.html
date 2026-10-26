@@ -27,7 +27,11 @@ layout: default
           <li>
             {% assign date_format = site.minima.date_format | default: "%b %-d, %Y" %}
             <div class="post-summary-container">
+
+              {%- if post.image -%}
               <img src="{{- post.image | relative_url -}}" alt="{{- post.image_alt -}}"> </img>
+              {%- endif -%}
+
               <div>
                 <span class="post-meta">{{ post.date | date: date_format }}</span>
                 <h3>
